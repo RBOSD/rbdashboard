@@ -350,14 +350,14 @@
         function renderHeatmap(data) {
             let rowField = 'l1';
             let rowLabel = '一階肇因';
-            let breadcrumbStr = '🔥 【高階監理視角】營運機構 vs 肇因熱點分布矩陣 (目前：一階)';
+            let breadcrumbStr = '🔥 肇因熱點分布矩陣 (目前：一階)';
 
             if (currentDrillLevel === 2) { 
                 rowField = 'l2'; rowLabel = '二階肇因'; 
-                breadcrumbStr = `🔥 【高階監理視角】營運機構 vs 二階肇因矩陣 (隸屬：${selectedL1})`;
+                breadcrumbStr = `🔥 二階肇因矩陣 (隸屬：${selectedL1})`;
             } else if (currentDrillLevel === 3) { 
                 rowField = 'l3'; rowLabel = '三階肇因'; 
-                breadcrumbStr = `🔥 【高階監理視角】營運機構 vs 三階肇因矩陣 (隸屬：${selectedL2})`;
+                breadcrumbStr = `🔥 三階肇因矩陣 (隸屬：${selectedL2})`;
             }
 
             document.getElementById('heatmapBreadcrumb').innerText = breadcrumbStr;
