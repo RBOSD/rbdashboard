@@ -213,6 +213,7 @@
                 type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
                 options: { 
                     responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
+                    layout: { padding: { right: 90, left: 5, top: 5, bottom: 5 } },
                     plugins: { title: { display: false }, legend: { display: false } },
                     onClick: (e, activeElements) => {
                         if (activeElements.length > 0) {
@@ -229,6 +230,7 @@
                 type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
                 options: { 
                     responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
+                    layout: { padding: { right: 90, left: 5, top: 5, bottom: 5 } },
                     plugins: { title: { display: false }, legend: { display: false } },
                     onClick: (e, activeElements) => {
                         if (activeElements.length > 0) { drillDown(causeChart.data.labels[activeElements[0].index]); }
