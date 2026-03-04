@@ -42,11 +42,71 @@
         .heatmap-table td.data-cell:hover { opacity: 0.8; outline: 1px solid #32CEE6; cursor: crosshair; }
         
         .hint { font-size: 12px; color: #5C677D; text-align: center; margin-top: 8px; }
+
+        /* ===== 響應式：依螢幕解析度最佳呈現 ===== */
+        @media (min-width: 1600px) {
+            body { padding: 24px; max-width: 1920px; margin: 0 auto; }
+            .chart-container { height: 280px; }
+            .tall-container { height: 420px; }
+            .stat-value { font-size: 42px; }
+        }
+        @media (min-width: 768px) and (max-width: 1199px) {
+            body { padding: 16px; }
+            .grid-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .grid-top { grid-template-columns: 1fr 1fr; }
+            .grid-top .panel:first-child { grid-column: 1 / -1; }
+            .grid-top .chart-container { height: 240px; }
+            .grid-bottom { grid-template-columns: 1fr; }
+            .tall-container { height: 360px; }
+            .chart-container { height: 240px; }
+            #heatmapContainer, .grid-bottom .chart-container { height: 300px !important; }
+            .stat-value { font-size: 32px; }
+            .heatmap-table { font-size: 12px; }
+        }
+        @media (min-width: 576px) and (max-width: 767px) {
+            body { padding: 12px; }
+            h1 { font-size: 1.3rem; }
+            .toolbar { flex-wrap: wrap; gap: 10px; }
+            .grid-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .grid-top { grid-template-columns: 1fr; gap: 12px; }
+            .grid-top .panel:first-child { grid-column: auto; }
+            .grid-bottom { grid-template-columns: 1fr; gap: 12px; }
+            .chart-container { height: 220px; }
+            .tall-container { height: 320px; }
+            #heatmapContainer, .grid-bottom .chart-container { height: 260px !important; }
+            .panel { padding: 12px; }
+            .stat-value { font-size: 28px; }
+            .stat-label { font-size: 12px; }
+            .heatmap-table { font-size: 12px; display: block; overflow-x: auto; }
+            .heatmap-table th, .heatmap-table td { padding: 6px; min-width: 55px; }
+            .heatmap-table td.row-header { min-width: 130px; }
+        }
+        @media (max-width: 575px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.1rem; }
+            .subtitle { font-size: 0.9rem; margin-bottom: 12px; }
+            .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .grid-stats { grid-template-columns: 1fr; gap: 8px; }
+            .grid-top, .grid-bottom { grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px; }
+            .grid-top .panel:first-child { grid-column: auto; }
+            .chart-container { height: 200px; }
+            .tall-container { height: 280px; }
+            #heatmapContainer, .grid-bottom .chart-container { height: 220px !important; }
+            .panel { padding: 10px; }
+            .panel-title { font-size: 13px; }
+            .stat-value { font-size: 26px; }
+            .stat-label { font-size: 11px; }
+            .btn-action { padding: 5px 12px; font-size: 12px; }
+            .panel-title[style*="display: flex"] { flex-wrap: wrap; gap: 6px; }
+            .heatmap-table { font-size: 11px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .heatmap-table th, .heatmap-table td { padding: 5px; min-width: 48px; }
+            .heatmap-table td.row-header { min-width: 110px; font-size: 10px; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>🚆 鐵道事故事件監理中心</h1>
+    <h1>🚆 事故事件動態分析看板</h1>
     <div class="subtitle">點擊圖表可進行分析</div>
 
     <div class="grid-stats">
@@ -154,7 +214,48 @@
         // 全域過濾狀態
         let state = { op: null, cls: null, l1: null, l2: null, l3: null, drillLevel: 1 };
 
-        window.onload = function() { initCharts(); updateDashboard(); };
+        function getResponsiveFontSizes() {
+            const w = window.innerWidth;
+            if (w >= 1600) return { title: 14, tick: 11 };
+            if (w >= 1200) return { title: 13, tick: 10 };
+            if (w >= 768) return { title: 12, tick: 9 };
+            if (w >= 576) return { title: 11, tick: 8 };
+            return { title: 10, tick: 7 };
+        }
+
+        function applyResponsiveFonts() {
+            const fs = getResponsiveFontSizes();
+            const w = window.innerWidth;
+            const pieLegendPos = w < 768 ? 'bottom' : 'right';
+            const charts = [trendChart, operatorPieChart, classPieChart, causeChart];
+            charts.forEach((ch, i) => {
+                if (!ch) return;
+                if (ch.options.plugins?.title) {
+                    const t = ch.options.plugins.title;
+                    t.font = { ...(t.font || {}), size: fs.title };
+                }
+                if (ch.options.plugins?.legend) {
+                    if (ch === operatorPieChart || ch === classPieChart) ch.options.plugins.legend.position = pieLegendPos;
+                    if (ch.options.plugins.legend.labels) {
+                        ch.options.plugins.legend.labels.font = { ...(ch.options.plugins.legend.labels.font || {}), size: fs.tick };
+                    }
+                }
+                if (ch.options.scales) {
+                    ['x', 'y'].forEach(axis => {
+                        const ticks = ch.options.scales[axis]?.ticks;
+                        if (ticks) ticks.font = { ...(ticks.font || {}), size: fs.tick };
+                    });
+                }
+                try { ch.update('resize'); } catch (_) { ch.update(); }
+            });
+        }
+
+        let resizeTimer;
+        window.onload = function() { initCharts(); updateDashboard(); applyResponsiveFonts(); };
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(applyResponsiveFonts, 150);
+        });
 
         function initCharts() {
             trendChart = new Chart(document.getElementById('trendChart'), {
