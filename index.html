@@ -6,224 +6,132 @@
     <title>鐵道事故事件動態監理看板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: '微軟正黑體', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-        h1 { text-align: center; color: #00508F; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #5f6368; margin-bottom: 20px; font-weight: bold; }
-        .control-panel { background: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; border-left: 5px solid #00508F; }
-        select { padding: 8px 12px; font-size: 15px; border: 1px solid #ccd0d5; border-radius: 6px; outline: none; background-color: #f8f9fa; cursor: pointer; }
-        select:hover { border-color: #00508F; }
+        /* 暗黑戰情室背景與字體 */
+        body { font-family: '微軟正黑體', sans-serif; background-color: #111217; margin: 0; padding: 20px; color: #C8D4E3; }
+        h1 { text-align: center; color: #E8F0FE; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .subtitle { text-align: center; color: #8E9BAE; margin-bottom: 20px; font-weight: bold; }
         
-        /* 版面網格重構：漏斗式動線 */
-        .dashboard-grid-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .dashboard-grid-middle { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; margin-bottom: 20px; }
-        .dashboard-grid-bottom { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        /* 網格佈局 */
+        .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        .grid-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .grid-bottom { display: grid; grid-template-columns: 1fr 1.5fr; gap: 15px; }
         
-        .chart-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; height: 320px; }
-        .tall-container { height: 400px; } /* 微調高度讓畫面更緊湊 */
-        .auto-height { height: auto; min-height: 250px; }
+        /* 戰情面板樣式 */
+        .panel { background-color: #181B1F; border: 1px solid #2B2D37; border-radius: 6px; padding: 15px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .panel-title { font-size: 14px; font-weight: bold; color: #8E9BAE; margin-bottom: 10px; border-bottom: 1px solid #2B2D37; padding-bottom: 8px; }
+        .chart-container { position: relative; height: 260px; width: 100%; }
+        .tall-container { height: 380px; }
         
-        .breadcrumb { font-size: 14px; color: #00508F; margin-bottom: 10px; font-weight: bold; background: #e8f0fe; padding: 10px 15px; border-radius: 6px; border: 1px solid #d2e3fc;}
-        .drill-btn { background-color: #424242; color: white; cursor: pointer; border: none; font-weight: bold; padding: 6px 12px; border-radius: 6px; transition: background 0.2s;}
-        .drill-btn:hover { background-color: #212121; }
-        .reset-btn { background-color: #fff; color: #00508F; border: 2px solid #00508F; font-weight: bold; padding: 8px 15px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 14px;}
-        .reset-btn:hover { background-color: #e8f0fe; }
-        .summary-text { font-size: 15px; color: #3c4043; margin-left: auto; font-weight: bold; background: #fef7e0; padding: 8px 15px; border-radius: 6px; border: 1px solid #fce8b2;}
-        .hint { font-size: 12px; color: #888; text-align: center; margin-top: 5px; }
+        /* 頂部大數字 (BANs) */
+        .stat-value { font-size: 38px; font-weight: bold; text-align: center; margin-top: 10px; font-family: 'Arial', sans-serif;}
+        .stat-label { font-size: 13px; text-align: center; color: #6C7A92; margin-top: 5px; }
+        
+        /* 工具列與按鈕 */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .breadcrumb { font-size: 13px; color: #FF9830; background: rgba(255, 152, 48, 0.1); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(255, 152, 48, 0.3); }
+        .btn-action { background-color: #32CEE6; color: #111217; cursor: pointer; border: none; font-weight: bold; padding: 6px 15px; border-radius: 4px; transition: all 0.2s; font-size: 13px; }
+        .btn-action:hover { background-color: #28A6B9; box-shadow: 0 0 10px rgba(50, 206, 230, 0.4); }
+        .btn-reset { background-color: transparent; color: #8E9BAE; border: 1px solid #8E9BAE; }
+        .btn-reset:hover { background-color: #2B2D37; color: #FFF; }
 
-        .heatmap-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 10px; }
-        .heatmap-table th { background-color: #f8f9fa; color: #5f6368; padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: center; width: 15%; }
-        .heatmap-table td { border: 1px solid #fff; padding: 10px; text-align: center; font-weight: bold; transition: opacity 0.2s; }
-        .heatmap-table td.row-header { background-color: #f8f9fa; color: #333; text-align: left; padding-left: 15px; border: 1px solid #ddd; width: 40%; } /* 加寬文字區，適應三階長度 */
-        .heatmap-table td.data-cell:hover { opacity: 0.8; outline: 2px solid #00508F; cursor: crosshair; }
-
-        /* ===== 響應式斷點：依螢幕解析度最佳呈現 ===== */
-        /* 超大螢幕 (≥1600px)：完整三欄、大圖表 */
-        @media (min-width: 1600px) {
-            body { padding: 24px; max-width: 1920px; margin: 0 auto; }
-            .chart-container { height: 360px; }
-            .tall-container { height: 450px; }
-        }
-        /* 大螢幕 (1200px~1599px)：維持原版面 */
-        @media (min-width: 1200px) and (max-width: 1599px) {
-            body { padding: 20px; }
-        }
-        /* 中螢幕 (768px~1199px)：上排改 2 欄、中排改 1 欄堆疊 */
-        @media (min-width: 768px) and (max-width: 1199px) {
-            body { padding: 16px; }
-            .dashboard-grid-top { grid-template-columns: 1fr 1fr; gap: 16px; }
-            .dashboard-grid-top .chart-container:first-child { grid-column: 1 / -1; height: 280px; }
-            .dashboard-grid-middle { grid-template-columns: 1fr; gap: 16px; }
-            .chart-container { height: 300px; }
-            .tall-container { height: 360px; }
-            .heatmap-table { font-size: 14px; }
-            .heatmap-table th, .heatmap-table td { padding: 8px; }
-        }
-        /* 小螢幕 (576px~767px)：單欄、緊湊佈局 */
-        @media (min-width: 576px) and (max-width: 767px) {
-            body { padding: 12px; }
-            h1 { font-size: 1.4rem; }
-            .control-panel { flex-direction: column; align-items: stretch; gap: 12px; padding: 12px; }
-            .summary-text { margin-left: 0; }
-            .dashboard-grid-top { grid-template-columns: 1fr; gap: 12px; }
-            .dashboard-grid-top .chart-container:first-child { grid-column: auto; }
-            .dashboard-grid-middle { grid-template-columns: 1fr; gap: 12px; }
-            .chart-container { height: 260px; padding: 12px; }
-            .tall-container { height: 320px; }
-            .breadcrumb { font-size: 13px; padding: 8px 12px; }
-            .heatmap-table { font-size: 13px; display: block; overflow-x: auto; }
-            .heatmap-table th, .heatmap-table td { padding: 6px; min-width: 60px; }
-            .heatmap-table td.row-header { min-width: 140px; width: auto; }
-        }
-        /* 小螢幕以下：肇因區塊標題與按鈕可換行 */
-        @media (max-width: 767px) {
-            #causeBreadcrumb { flex: 1; min-width: 0; }
-            .chart-container [style*="display: flex"] { flex-wrap: wrap; gap: 8px; }
-        }
-        /* 超小螢幕 (<576px)：手機優先、最小化 */
-        @media (max-width: 575px) {
-            body { padding: 10px; }
-            h1 { font-size: 1.2rem; margin-bottom: 8px; }
-            .subtitle { font-size: 0.9rem; margin-bottom: 12px; }
-            .control-panel { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px; }
-            .summary-text { margin-left: 0; font-size: 13px; padding: 6px 10px; }
-            select { font-size: 14px; padding: 6px 10px; }
-            .reset-btn { padding: 6px 12px; font-size: 13px; }
-            .dashboard-grid-top, .dashboard-grid-middle, .dashboard-grid-bottom { grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px; }
-            .dashboard-grid-top .chart-container:first-child { grid-column: auto; }
-            .chart-container { height: 220px; padding: 10px; }
-            .tall-container { height: 280px; }
-            .breadcrumb { font-size: 12px; padding: 6px 10px; }
-            .drill-btn { padding: 5px 10px; font-size: 12px; }
-            .hint { font-size: 11px; }
-            .heatmap-table { font-size: 12px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .heatmap-table th, .heatmap-table td { padding: 5px; min-width: 50px; font-size: 12px; }
-            .heatmap-table td.row-header { min-width: 120px; font-size: 11px; padding-left: 8px; }
-        }
+        /* 熱力矩陣 (暗黑版) */
+        .heatmap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 5px; }
+        .heatmap-table th { background-color: #181B1F; color: #8E9BAE; padding: 8px; border-bottom: 1px solid #2B2D37; font-weight: normal; text-align: center; width: 15%; }
+        .heatmap-table td { border: 1px solid #111217; padding: 10px; text-align: center; font-weight: bold; transition: opacity 0.2s; }
+        .heatmap-table td.row-header { background-color: #181B1F; color: #C8D4E3; text-align: left; padding-left: 10px; border-right: 1px solid #2B2D37; font-weight: normal; width: 40%; }
+        .heatmap-table td.data-cell:hover { opacity: 0.8; outline: 1px solid #32CEE6; cursor: crosshair; }
+        
+        .hint { font-size: 12px; color: #5C677D; text-align: center; margin-top: 8px; }
     </style>
 </head>
 <body>
 
-    <h1>🚆 鐵道機構事故事件動態監理看板</h1>
-    <div class="subtitle"></div>
+    <h1>🚆 鐵道事故事件監理中心</h1>
+    <div class="subtitle">點擊圖表即可全域過濾</div>
 
-    <div class="control-panel">
-        <label><strong>營運機構：</strong>
-            <select id="operatorFilter" onchange="updateAllCharts()">
-                <option value="all">全機構 (臺/高/林/糖)</option>
-                <option value="臺鐵">臺鐵</option>
-                <option value="高鐵">高鐵</option>
-                <option value="林鐵">林鐵</option>
-                <option value="糖鐵">糖鐵</option>
-            </select>
-        </label>
-        
-        <label><strong>時間呈現：</strong>
-            <select id="timeAggFilter" onchange="updateAllCharts()">
-                <option value="month">以月為單位</option>
-                <option value="quarter">以季為單位</option>
-            </select>
-        </label>
-
-        <label><strong>特定區間：</strong>
-            <select id="monthFilter" onchange="updateAllCharts()">
-                <option value="all">全區間</option>
-                <option value="114/08">114年08月</option>
-                <option value="114/09">114年09月</option>
-                <option value="114/10">114年10月</option>
-                <option value="114/11">114年11月</option>
-                <option value="114/12">114年12月</option>
-                <option value="115/01">115年01月</option>
-                <option value="115/02">115年02月</option>
-            </select>
-        </label>
-        
-        <label><strong>事件分類：</strong>
-            <select id="classFilter" onchange="updateAllCharts()">
-                <option value="all">全部分類</option>
-                <option value="重大行車事故">重大行車事故</option>
-                <option value="一般行車事故">一般行車事故</option>
-                <option value="異常事件">異常事件</option>
-            </select>
-        </label>
-        
-        <button class="reset-btn" onclick="resetDashboard()">🔄 重新整理</button>
-
-        <div class="summary-text" id="dataSummary">系統載入中...</div>
-    </div>
-
-    <div class="dashboard-grid-top">
-        <div class="chart-container"><canvas id="trendChart"></canvas></div>
-        <div class="chart-container"><canvas id="operatorPieChart"></canvas></div>
-        <div class="chart-container"><canvas id="classPieChart"></canvas></div>
-    </div>
-
-    <div class="dashboard-grid-middle">
-        <div class="chart-container tall-container">
-            <div class="breadcrumb" style="background:#fce8e6; color:#c5221f; border-color:#fad2cf;">
-                📌 事故事件種類
-            </div>
-            <canvas id="typeChart"></canvas>
-            <div class="hint">💡 點選以過濾看板，未選項目將自動反灰</div>
+    <div class="grid-stats">
+        <div class="panel" style="border-top: 3px solid #C8D4E3;">
+            <div class="stat-value" id="statTotal" style="color: #FFFFFF;">--</div>
+            <div class="stat-label">當前篩選累計件數</div>
         </div>
-
-        <div class="chart-container tall-container">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div id="causeBreadcrumb" class="breadcrumb">
-                    🔍 肇因鑽研：目前檢視「原因一階」
-                </div>
-                <button id="btnBack" class="drill-btn" onclick="goBackLevel()" style="display:none;">⤴ 返回上一層</button>
-            </div>
-            <canvas id="causeChart"></canvas>
-            <div class="hint">💡 點擊下方長條圖進行肇因分析</div>
+        <div class="panel" style="border-top: 3px solid #E02F44;">
+            <div class="stat-value" id="statMajor" style="color: #E02F44; text-shadow: 0 0 10px rgba(224,47,68,0.3);">--</div>
+            <div class="stat-label">重大行車事故</div>
+        </div>
+        <div class="panel" style="border-top: 3px solid #FF9830;">
+            <div class="stat-value" id="statGeneral" style="color: #FF9830; text-shadow: 0 0 10px rgba(255,152,48,0.3);">--</div>
+            <div class="stat-label">一般行車事故</div>
+        </div>
+        <div class="panel" style="border-top: 3px solid #32CEE6;">
+            <div class="stat-value" id="statAnomaly" style="color: #32CEE6; text-shadow: 0 0 10px rgba(50,206,230,0.3);">--</div>
+            <div class="stat-label">異常事件</div>
         </div>
     </div>
 
-    <div class="dashboard-grid-bottom">
-        <div class="chart-container auto-height" style="padding: 25px;">
-            <div id="heatmapBreadcrumb" class="breadcrumb" style="background:#fff3e0; color:#e65100; border-color:#ffe0b2;">
-                🔥 肇因熱點分布矩陣
+    <div class="toolbar">
+        <div id="filterBreadcrumb" class="breadcrumb" style="visibility: hidden;">目前已套用篩選器</div>
+        <button class="btn-action btn-reset" onclick="resetDashboard()">🔄 清除所有過濾條件</button>
+    </div>
+
+    <div class="grid-top">
+        <div class="panel">
+            <div class="panel-title">事故發生趨勢</div>
+            <div class="chart-container"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">營運機構佔比 (點擊過濾)</div>
+            <div class="chart-container"><canvas id="operatorPieChart"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">事件分類佔比 (點擊過濾)</div>
+            <div class="chart-container"><canvas id="classPieChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="grid-bottom">
+        <div class="panel tall-container">
+            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="causeTitle">肇因深度鑽研</span>
+                <button id="btnBack" class="btn-action" onclick="goBackLevel()" style="display:none; padding: 3px 10px; font-size:12px;">⤴ 返回上一層</button>
             </div>
-            <div id="heatmapContainer">系統運算矩陣中...</div>
-            <div class="hint">💡 顏色越紅代表該機構在該肇因下發生的事故件數越密集</div>
+            <div class="chart-container" style="height: 310px;"><canvas id="causeChart"></canvas></div>
+        </div>
+
+        <div class="panel tall-container">
+            <div class="panel-title" id="heatmapTitle">營運機構 vs 肇因 熱區矩陣 (連動展延)</div>
+            <div id="heatmapContainer" style="overflow-y: auto; height: 310px;">系統運算矩陣中...</div>
         </div>
     </div>
 
     <script>
+        // 設定 Chart.js 為暗黑戰情室風格
+        Chart.defaults.color = '#8E9BAE';
+        Chart.defaults.borderColor = '#2B2D37';
+        Chart.defaults.font.family = "'微軟正黑體', sans-serif";
+
         const operators = ['臺鐵', '高鐵', '林鐵', '糖鐵'];
         const months = ['114/08', '114/09', '114/10', '114/11', '114/12', '115/01', '115/02'];
-        const quarters = ['114年 Q3', '114年 Q4', '115年 Q1'];
         
-        const monthToQuarter = {
-            '114/08': '114年 Q3', '114/09': '114年 Q3',
-            '114/10': '114年 Q4', '114/11': '114年 Q4', '114/12': '114年 Q4',
-            '115/01': '115年 Q1', '115/02': '115年 Q1'
-        };
+        // 科技感 CI 色彩 + 警示色彩
+        const OP_COLORS = { '臺鐵': '#42A5F5', '高鐵': '#FF7043', '林鐵': '#66BB6A', '糖鐵': '#D4E157' }; // 調亮以適應黑底
+        const CLS_COLORS = { '重大行車事故': '#E02F44', '一般行車事故': '#FF9830', '異常事件': '#32CEE6' };
+        const DEPTH_COLORS = { 1: '#475569', 2: '#64748B', 3: '#94A3B8' };
+        const FOCUS_COLOR = '#32CEE6'; 
+        const FADE_COLOR = '#1E2228';  
 
-        const OPERATOR_COLORS = { '臺鐵': '#00508F', '高鐵': '#EA5C04', '林鐵': '#276E46', '糖鐵': '#8DA845' };
-        const CLASS_COLORS = { '重大行車事故': '#ea4335', '一般行車事故': '#f29900', '異常事件': '#90A4AE' };
-        const DEPTH_COLORS = { 1: '#424242', 2: '#757575', 3: '#BDBDBD' };
-        const FOCUS_COLOR = '#00897B'; 
-        const FADE_COLOR = '#EEEEEE';  
-        
         const causeTemplates = [
             { class: '異常事件', type: '列車或車輛故障', l1: '1.鐵路設備功能異常', l2: '1.01車輛設備功能異常', l3: '1.01.01動力系統異常' },
-            { class: '異常事件', type: '列車或車輛故障', l1: '1.鐵路設備功能異常', l2: '1.01車輛設備功能異常', l3: '1.01.03機(臺鐵、林鐵、糖鐵)/煞車(高鐵)系統異常' },
-            { class: '異常事件', type: '運轉保安裝置故障', l1: '1.鐵路設備功能異常', l2: '1.02運轉保安裝置功能異常', l3: '1.02.01轉轍器/道岔定位異常' },
-            { class: '異常事件', type: '運轉保安裝置故障', l1: '1.鐵路設備功能異常', l2: '1.02運轉保安裝置功能異常', l3: '1.02.06計軸器異常' },
-            { class: '重大行車事故', type: '正線出軌事故', l1: '1.鐵路設備功能異常', l2: '1.04軌道設備/土木結構異常', l3: '1.04.01鋼軌斷裂' },
-            { class: '異常事件', type: '違反號誌運轉', l1: '2.員工與承商因素', l2: '2.01鐵路員工疏失', l3: '2.01.09未確認號誌、號訊、標誌' },
-            { class: '重大行車事故', type: '正線衝撞事故', l1: '2.員工與承商因素', l2: '2.01鐵路員工疏失', l3: '2.01.11未遵守程序操作列車或車輛' },
-            { class: '一般行車事故', type: '出軌事故', l1: '2.員工與承商因素', l2: '2.02鐵路機構承包商疏失', l3: '2.02.01侵入路線淨空' },
-            { class: '一般行車事故', type: '平交道事故', l1: '3.民眾與旅客因素', l2: '3.02民眾/汽機車闖入站間軌道', l3: '3.02.01民眾/汽機車闖入站間軌道' },
-            { class: '一般行車事故', type: '死傷事故', l1: '3.民眾與旅客因素', l2: '3.03旅客闖入/跌落月台軌道', l3: '3.03.01旅客闖入/跌落月台軌道' },
-            { class: '異常事件', type: '外物入侵', l1: '4.外物因素', l2: '4.01動物入侵路線', l3: '4.01.01動物入侵路線' },
-            { class: '異常事件', type: '路線障礙', l1: '4.外物因素', l2: '4.02樹木枝葉/土石入侵路線', l3: '4.02.01樹木枝葉/土石入侵路線' },
-            { class: '異常事件', type: '天然災變', l1: '5.天然因素', l2: '5.01豪大雨', l3: '5.01.01豪大雨' },
-            { class: '異常事件', type: '天然災變', l1: '5.天然因素', l2: '5.02地震', l3: '5.02.01地震' }
+            { class: '異常事件', type: '列車或車輛故障', l1: '1.鐵路設備功能異常', l2: '1.01車輛設備功能異常', l3: '1.01.03機(臺鐵、林鐵)/煞車(高鐵)異常' },
+            { class: '異常事件', type: '運轉保安裝置故障', l1: '1.鐵路設備功能異常', l2: '1.02運轉保安功能異常', l3: '1.02.01轉轍器定位異常' },
+            { class: '重大行車事故', type: '正線出軌事故', l1: '1.鐵路設備功能異常', l2: '1.04軌道設備異常', l3: '1.04.01鋼軌斷裂' },
+            { class: '異常事件', type: '違反號誌運轉', l1: '2.員工與承商因素', l2: '2.01鐵路員工疏失', l3: '2.01.09未確認號誌標誌' },
+            { class: '重大行車事故', type: '正線衝撞事故', l1: '2.員工與承商因素', l2: '2.01鐵路員工疏失', l3: '2.01.11未遵守程序操作' },
+            { class: '一般行車事故', type: '出軌事故', l1: '2.員工與承商因素', l2: '2.02承包商疏失', l3: '2.02.01侵入路線淨空' },
+            { class: '一般行車事故', type: '平交道事故', l1: '3.民眾與旅客因素', l2: '3.02民眾闖入軌道', l3: '3.02.01民眾/汽機車闖入' },
+            { class: '一般行車事故', type: '死傷事故', l1: '3.民眾與旅客因素', l2: '3.03旅客跌落月台', l3: '3.03.01旅客闖入/跌落' },
+            { class: '異常事件', type: '外物入侵', l1: '4.外物因素', l2: '4.01動物入侵', l3: '4.01.01動物入侵路線' },
+            { class: '異常事件', type: '天然災變', l1: '5.天然因素', l2: '5.01氣候異常', l3: '5.01.01豪大雨' }
         ];
-
-        const typeToClassMap = {};
-        causeTemplates.forEach(t => { typeToClassMap[t.type] = t.class; });
 
         let rawData = [];
         for (let i = 0; i < 5000; i++) {
@@ -234,153 +142,172 @@
             let randomCount = Math.floor(Math.random() * 10) < 9 ? 1 : 2;
 
             rawData.push({
-                operator: selectedOp, month: m, quarter: monthToQuarter[m],
+                operator: selectedOp, month: m,
                 class: selectedTemplate.class, type: selectedTemplate.type,
                 l1: selectedTemplate.l1, l2: selectedTemplate.l2, l3: selectedTemplate.l3,
                 count: randomCount
             });
         }
 
-        let trendChart, operatorPieChart, classPieChart, typeChart, causeChart;
-        let selectedTypeFilter = null; 
-        let currentDrillLevel = 1; 
-        let selectedL1 = null, selectedL2 = null, selectedL3 = null; 
+        let trendChart, operatorPieChart, classPieChart, causeChart;
+        
+        // 全域過濾狀態
+        let state = { op: null, cls: null, l1: null, l2: null, l3: null, drillLevel: 1 };
 
-        /* 依螢幕寬度回傳圖表字體設定 */
-        function getResponsiveFontSizes() {
-            const w = window.innerWidth;
-            if (w >= 1600) return { title: 14, tick: 12 };
-            if (w >= 1200) return { title: 13, tick: 11 };
-            if (w >= 768) return { title: 12, tick: 10 };
-            if (w >= 576) return { title: 11, tick: 9 };
-            return { title: 10, tick: 8 };
-        }
-
-        function applyResponsiveFonts() {
-            const fs = getResponsiveFontSizes();
-            const charts = [trendChart, operatorPieChart, classPieChart, typeChart, causeChart];
-            charts.forEach(ch => {
-                if (!ch) return;
-                if (ch.options.plugins?.title) {
-                    const t = ch.options.plugins.title;
-                    t.font = { ...(t.font || {}), size: fs.title };
-                }
-                if (ch.options.scales) {
-                    ['x', 'y'].forEach(axis => {
-                        const ticks = ch.options.scales[axis]?.ticks;
-                        if (ticks) ticks.font = { ...(ticks.font || {}), size: fs.tick };
-                    });
-                }
-                try { ch.update('resize'); } catch (_) { ch.update(); }
-            });
-        }
-
-        let resizeTimer;
-        window.onload = function() { initCharts(); updateAllCharts(); applyResponsiveFonts(); };
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(applyResponsiveFonts, 150);
-        });
-
-        function getBaseData() {
-            const opFilter = document.getElementById('operatorFilter').value;
-            const mFilter = document.getElementById('monthFilter').value;
-            const cFilter = document.getElementById('classFilter').value;
-            return rawData.filter(d => (opFilter === 'all' || d.operator === opFilter) && (mFilter === 'all' || d.month === mFilter) && (cFilter === 'all' || d.class === cFilter));
-        }
+        window.onload = function() { initCharts(); updateDashboard(); };
 
         function initCharts() {
-            Chart.defaults.font.family = "'微軟正黑體', sans-serif";
-            
             trendChart = new Chart(document.getElementById('trendChart'), {
-                type: 'bar', data: { labels: [], datasets: [] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '事故發生趨勢' } }, scales: { x: { stacked: true }, y: { stacked: true } } }
+                type: 'line', data: { labels: months, datasets: [] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } }, 
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, border: { dash: [4, 4] } } },
+                    elements: { line: { tension: 0.4, borderWidth: 2 }, point: { radius: 0, hoverRadius: 6 } }
+                }
             });
 
             operatorPieChart = new Chart(document.getElementById('operatorPieChart'), {
-                type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '營運機構佔比' } } }
+                type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 2, borderColor: '#111217' }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'right', labels: { usePointStyle: true } } },
+                    onClick: (e, el) => { if(el.length>0) { state.op = state.op === operatorPieChart.data.labels[el[0].index] ? null : operatorPieChart.data.labels[el[0].index]; updateDashboard(); } }
+                }
             });
 
             classPieChart = new Chart(document.getElementById('classPieChart'), {
-                type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '分類佔比 (重大/一般/異常)' } } }
-            });
-
-            typeChart = new Chart(document.getElementById('typeChart'), {
-                type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 2, borderColor: '#111217' }] },
                 options: { 
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
-                    layout: { padding: { right: 90, left: 5, top: 5, bottom: 5 } },
-                    plugins: { title: { display: false }, legend: { display: false } },
-                    onClick: (e, activeElements) => {
-                        if (activeElements.length > 0) {
-                            const clickedType = typeChart.data.labels[activeElements[0].index];
-                            selectedTypeFilter = (selectedTypeFilter === clickedType) ? null : clickedType;
-                            currentDrillLevel = 1; selectedL1 = null; selectedL2 = null; selectedL3 = null;
-                            updateAllCharts(); 
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'right', labels: { usePointStyle: true } } },
+                    onClick: (e, el) => { if(el.length>0) { state.cls = state.cls === classPieChart.data.labels[el[0].index] ? null : classPieChart.data.labels[el[0].index]; updateDashboard(); } }
                 }
             });
 
             causeChart = new Chart(document.getElementById('causeChart'), {
-                type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4 }] },
                 options: { 
                     responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
-                    layout: { padding: { right: 90, left: 5, top: 5, bottom: 5 } },
-                    plugins: { title: { display: false }, legend: { display: false } },
-                    onClick: (e, activeElements) => {
-                        if (activeElements.length > 0) { drillDown(causeChart.data.labels[activeElements[0].index]); }
-                    }
+                    plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { display: false } } },
+                    onClick: (e, el) => { if(el.length>0) drillDown(causeChart.data.labels[el[0].index]); }
                 }
             });
         }
 
         function resetDashboard() {
-            document.getElementById('operatorFilter').value = 'all';
-            document.getElementById('timeAggFilter').value = 'month';
-            document.getElementById('monthFilter').value = 'all';
-            document.getElementById('classFilter').value = 'all';
+            state = { op: null, cls: null, l1: null, l2: null, l3: null, drillLevel: 1 };
+            updateDashboard();
+        }
 
-            selectedTypeFilter = null; currentDrillLevel = 1; selectedL1 = null; selectedL2 = null; selectedL3 = null;
-            updateAllCharts();
+        function drillDown(label) {
+            if (state.drillLevel === 1) { state.l1 = label; state.drillLevel = 2; } 
+            else if (state.drillLevel === 2) { state.l2 = label; state.drillLevel = 3; } 
+            else if (state.drillLevel === 3) { state.l3 = state.l3 === label ? null : label; }
+            updateDashboard();
+        }
+
+        function goBackLevel() {
+            if (state.drillLevel === 3) { if (state.l3) state.l3 = null; else { state.drillLevel = 2; state.l2 = null; } } 
+            else if (state.drillLevel === 2) { state.drillLevel = 1; state.l1 = null; }
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            // 1. 取得過濾後資料
+            let filtered = rawData.filter(d => 
+                (!state.op || d.operator === state.op) &&
+                (!state.cls || d.class === state.cls) &&
+                (!state.l1 || d.l1 === state.l1) &&
+                (!state.l2 || d.l2 === state.l2) &&
+                (!state.l3 || d.l3 === state.l3)
+            );
+
+            // 2. 更新頂部指標 (Cards)
+            let stats = { total: 0, major: 0, general: 0, anomaly: 0 };
+            filtered.forEach(d => {
+                stats.total += d.count;
+                if (d.class === '重大行車事故') stats.major += d.count;
+                if (d.class === '一般行車事故') stats.general += d.count;
+                if (d.class === '異常事件') stats.anomaly += d.count;
+            });
+            document.getElementById('statTotal').innerText = stats.total.toLocaleString();
+            document.getElementById('statMajor').innerText = stats.major.toLocaleString();
+            document.getElementById('statGeneral').innerText = stats.general.toLocaleString();
+            document.getElementById('statAnomaly').innerText = stats.anomaly.toLocaleString();
+
+            // 更新麵包屑
+            let filterText = [];
+            if(state.op) filterText.push(`機構: ${state.op}`);
+            if(state.cls) filterText.push(`分類: ${state.cls}`);
+            let breadcrumbEl = document.getElementById('filterBreadcrumb');
+            if(filterText.length > 0) { breadcrumbEl.innerText = `🔍 套用條件：${filterText.join(' ｜ ')}`; breadcrumbEl.style.visibility = 'visible'; } 
+            else { breadcrumbEl.style.visibility = 'hidden'; }
+
+            // 3. 趨勢圖 (區域面積圖)
+            const trendData = { '重大行車事故': {}, '一般行車事故': {}, '異常事件': {} };
+            months.forEach(t => { trendData['重大行車事故'][t] = 0; trendData['一般行車事故'][t] = 0; trendData['異常事件'][t] = 0; });
+            filtered.forEach(d => { if(trendData[d.class][d.month] !== undefined) trendData[d.class][d.month] += d.count; });
+            
+            trendChart.data.datasets = [
+                { label: '重大', data: months.map(t => trendData['重大行車事故'][t]), borderColor: CLS_COLORS['重大行車事故'], backgroundColor: 'rgba(224, 47, 68, 0.15)', fill: true, hidden: state.cls && state.cls !== '重大行車事故' },
+                { label: '一般', data: months.map(t => trendData['一般行車事故'][t]), borderColor: CLS_COLORS['一般行車事故'], backgroundColor: 'rgba(255, 152, 48, 0.15)', fill: true, hidden: state.cls && state.cls !== '一般行車事故' },
+                { label: '異常', data: months.map(t => trendData['異常事件'][t]), borderColor: CLS_COLORS['異常事件'], backgroundColor: 'rgba(50, 206, 230, 0.15)', fill: true, hidden: state.cls && state.cls !== '異常事件' }
+            ];
+            trendChart.update();
+
+            // 4. 圓餅圖更新 (包含未選取反灰邏輯)
+            const opData = filtered.reduce((acc, curr) => { acc[curr.operator] = (acc[curr.operator] || 0) + curr.count; return acc; }, {});
+            operatorPieChart.data.labels = operators.filter(op => opData[op] !== undefined || !state.op); // 保持選項
+            operatorPieChart.data.datasets[0].data = operatorPieChart.data.labels.map(op => opData[op] || 0);
+            operatorPieChart.data.datasets[0].backgroundColor = operatorPieChart.data.labels.map(op => (!state.op || state.op === op) ? OP_COLORS[op] : FADE_COLOR);
+            operatorPieChart.update();
+
+            const clsOrder = ['重大行車事故', '一般行車事故', '異常事件'];
+            const classData = filtered.reduce((acc, curr) => { acc[curr.class] = (acc[curr.class] || 0) + curr.count; return acc; }, {});
+            classPieChart.data.labels = clsOrder.filter(cls => classData[cls] !== undefined || !state.cls);
+            classPieChart.data.datasets[0].data = classPieChart.data.labels.map(cls => classData[cls] || 0);
+            classPieChart.data.datasets[0].backgroundColor = classPieChart.data.labels.map(cls => (!state.cls || state.cls === cls) ? CLS_COLORS[cls] : FADE_COLOR);
+            classPieChart.update();
+
+            // 5. 肇因鑽研圖
+            let aggData = {}; let causeTitleStr = "肇因深度鑽研 (目前：一階)";
+            if (state.drillLevel === 1) {
+                document.getElementById('btnBack').style.display = 'none';
+                filtered.forEach(d => { aggData[d.l1] = (aggData[d.l1] || 0) + d.count; });
+            } else if (state.drillLevel === 2) {
+                document.getElementById('btnBack').style.display = 'inline-block'; causeTitleStr = `二階肇因 (隸屬：${state.l1})`;
+                filtered.forEach(d => { aggData[d.l2] = (aggData[d.l2] || 0) + d.count; });
+            } else if (state.drillLevel === 3) {
+                document.getElementById('btnBack').style.display = 'inline-block'; causeTitleStr = `三階肇因 (隸屬：${state.l2})`;
+                filtered.forEach(d => { aggData[d.l3] = (aggData[d.l3] || 0) + d.count; });
+            }
+            document.getElementById('causeTitle').innerText = causeTitleStr;
+
+            const sortedKeys = Object.keys(aggData).sort((a, b) => aggData[b] - aggData[a]);
+            causeChart.data.labels = sortedKeys;
+            causeChart.data.datasets[0].data = sortedKeys.map(k => aggData[k]);
+            causeChart.data.datasets[0].backgroundColor = sortedKeys.map(k => {
+                if(state.drillLevel === 3 && state.l3) return state.l3 === k ? FOCUS_COLOR : FADE_COLOR;
+                return DEPTH_COLORS[state.drillLevel];
+            });
+            causeChart.update();
+
+            // 6. 熱區矩陣
+            renderHeatmap(filtered);
         }
 
         function renderHeatmap(data) {
-            let rowField = 'l1';
-            let rowLabel = '一階肇因';
-            let breadcrumbStr = '🔥 肇因熱點分布矩陣 (目前：一階)';
-
-            if (currentDrillLevel === 2) { 
-                rowField = 'l2'; rowLabel = '二階肇因'; 
-                breadcrumbStr = `🔥 二階肇因矩陣 (隸屬：${selectedL1})`;
-            } else if (currentDrillLevel === 3) { 
-                rowField = 'l3'; rowLabel = '三階肇因'; 
-                breadcrumbStr = `🔥 三階肇因矩陣 (隸屬：${selectedL2})`;
-            }
-
-            document.getElementById('heatmapBreadcrumb').innerText = breadcrumbStr;
+            let rowField = state.drillLevel === 1 ? 'l1' : (state.drillLevel === 2 ? 'l2' : 'l3');
+            let rowLabel = state.drillLevel === 1 ? '一階肇因' : (state.drillLevel === 2 ? '二階肇因' : '三階肇因');
+            document.getElementById('heatmapTitle').innerText = `營運機構 vs ${rowLabel} 熱區矩陣`;
 
             let currentRows = [...new Set(data.map(d => d[rowField]))].sort();
-            if(currentRows.length === 0) {
-                currentRows = [...new Set(causeTemplates.map(t => t[rowField]))].sort();
-            }
+            if(currentRows.length === 0) currentRows = [...new Set(causeTemplates.map(t => t[rowField]))].sort();
 
-            let matrix = {};
-            let maxCount = 0;
-
-            currentRows.forEach(r => {
-                matrix[r] = {};
-                operators.forEach(op => { matrix[r][op] = 0; });
-            });
-
-            data.forEach(d => {
-                if (matrix[d[rowField]] && matrix[d[rowField]][d.operator] !== undefined) {
-                    matrix[d[rowField]][d.operator] += d.count;
-                }
-            });
-
+            let matrix = {}; let maxCount = 0;
+            currentRows.forEach(r => { matrix[r] = {}; operators.forEach(op => { matrix[r][op] = 0; }); });
+            data.forEach(d => { if (matrix[d[rowField]] && matrix[d[rowField]][d.operator] !== undefined) matrix[d[rowField]][d.operator] += d.count; });
             currentRows.forEach(r => { operators.forEach(op => { if(matrix[r][op] > maxCount) maxCount = matrix[r][op]; }); });
 
             let html = '<table class="heatmap-table">';
@@ -391,124 +318,15 @@
                 operators.forEach(op => {
                     let val = matrix[r][op];
                     let intensity = maxCount === 0 ? 0 : (val / maxCount);
-                    let bgCol = `rgba(234, 67, 53, ${intensity})`;
-                    let fgCol = intensity > 0.4 ? '#ffffff' : '#333333';
-                    if (val === 0) bgCol = '#fdfdfd'; 
-                    html += `<td class="data-cell" style="background-color: ${bgCol}; color: ${fgCol};" title="${op} - ${r}: ${val} 件">${val}</td>`;
+                    // 警示紅漸層
+                    let bgCol = val === 0 ? '#181B1F' : `rgba(224, 47, 68, ${0.1 + intensity*0.9})`; 
+                    let fgCol = intensity > 0.4 ? '#FFFFFF' : (val > 0 ? '#E8F0FE' : '#2B2D37');
+                    html += `<td class="data-cell" style="background-color: ${bgCol}; color: ${fgCol};">${val > 0 ? val : '-'}</td>`;
                 });
                 html += '</tr>';
             });
             html += '</table>';
-            
             document.getElementById('heatmapContainer').innerHTML = html;
-        }
-
-        function updateAllCharts() {
-            const baseData = getBaseData();
-            const timeAgg = document.getElementById('timeAggFilter').value;
-            let timeLabels = timeAgg === 'month' ? months : quarters;
-            let timeField = timeAgg === 'month' ? 'month' : 'quarter';
-
-            let topData = baseData;
-            if (selectedTypeFilter) topData = topData.filter(d => d.type === selectedTypeFilter);
-            if (selectedL1) topData = topData.filter(d => d.l1 === selectedL1);
-            if (selectedL2) topData = topData.filter(d => d.l2 === selectedL2);
-            if (selectedL3) topData = topData.filter(d => d.l3 === selectedL3);
-
-            // 1. 趨勢圖
-            const trendData = { '重大行車事故': {}, '一般行車事故': {}, '異常事件': {} };
-            timeLabels.forEach(t => { trendData['重大行車事故'][t] = 0; trendData['一般行車事故'][t] = 0; trendData['異常事件'][t] = 0; });
-            topData.forEach(d => { if(trendData[d.class][d[timeField]] !== undefined) trendData[d.class][d[timeField]] += d.count; });
-            
-            trendChart.data.labels = timeLabels;
-            trendChart.data.datasets = [
-                { label: '重大行車事故', data: timeLabels.map(t => trendData['重大行車事故'][t]), backgroundColor: CLASS_COLORS['重大行車事故'] },
-                { label: '一般行車事故', data: timeLabels.map(t => trendData['一般行車事故'][t]), backgroundColor: CLASS_COLORS['一般行車事故'] },
-                { label: '異常事件', data: timeLabels.map(t => trendData['異常事件'][t]), backgroundColor: CLASS_COLORS['異常事件'] }
-            ];
-            trendChart.options.plugins.title.text = timeAgg === 'month' ? '每月事故發生趨勢' : '每季事故發生趨勢';
-            trendChart.update();
-
-            // 2. 圓餅圖
-            const opData = topData.reduce((acc, curr) => { acc[curr.operator] = (acc[curr.operator] || 0) + curr.count; return acc; }, {});
-            const opOrder = ['臺鐵', '高鐵', '林鐵', '糖鐵'];
-            const opLabels = opOrder.filter(op => opData[op]); 
-            operatorPieChart.data.labels = opLabels; 
-            operatorPieChart.data.datasets[0].data = opLabels.map(op => opData[op]);
-            operatorPieChart.data.datasets[0].backgroundColor = opLabels.map(op => OPERATOR_COLORS[op]);
-            operatorPieChart.update();
-
-            const classData = topData.reduce((acc, curr) => { acc[curr.class] = (acc[curr.class] || 0) + curr.count; return acc; }, {});
-            const classOrder = ['重大行車事故', '一般行車事故', '異常事件'];
-            const classLabels = classOrder.filter(cls => classData[cls]); 
-            classPieChart.data.labels = classLabels; 
-            classPieChart.data.datasets[0].data = classLabels.map(cls => classData[cls]);
-            classPieChart.data.datasets[0].backgroundColor = classLabels.map(cls => CLASS_COLORS[cls]);
-            classPieChart.update();
-
-            // 3. 中層：左下種類圖
-            let tData = baseData;
-            if (selectedL1) tData = tData.filter(d => d.l1 === selectedL1);
-            if (selectedL2) tData = tData.filter(d => d.l2 === selectedL2);
-            if (selectedL3) tData = tData.filter(d => d.l3 === selectedL3);
-
-            const typeDataMap = tData.reduce((acc, curr) => { acc[curr.type] = (acc[curr.type] || 0) + curr.count; return acc; }, {});
-            const sortedTypes = Object.keys(typeDataMap).sort((a, b) => typeDataMap[b] - typeDataMap[a]);
-            typeChart.data.labels = sortedTypes;
-            typeChart.data.datasets[0].data = sortedTypes.map(t => typeDataMap[t]);
-            typeChart.data.datasets[0].backgroundColor = sortedTypes.map(label => {
-                const parentClass = typeToClassMap[label]; const baseColor = CLASS_COLORS[parentClass]; 
-                return (selectedTypeFilter === null || selectedTypeFilter === label) ? baseColor : FADE_COLOR; 
-            });
-            typeChart.update();
-
-            // 4. 中層：右下肇因鑽研圖
-            let cData = baseData;
-            if (selectedTypeFilter) cData = cData.filter(d => d.type === selectedTypeFilter);
-
-            let aggregatedData = {}; let breadcrumbText = "";
-            if (selectedTypeFilter) breadcrumbText += `(已篩選種類：${selectedTypeFilter}) `;
-
-            if (currentDrillLevel === 1) {
-                document.getElementById('btnBack').style.display = 'none'; breadcrumbText += "🔍 肇因鑽研：原因一階";
-                cData.forEach(d => { aggregatedData[d.l1] = (aggregatedData[d.l1] || 0) + d.count; });
-            } else if (currentDrillLevel === 2) {
-                document.getElementById('btnBack').style.display = 'block'; breadcrumbText += `🔍 肇因鑽研：原因二階 [隸屬 ${selectedL1}]`;
-                cData.filter(d => d.l1 === selectedL1).forEach(d => { aggregatedData[d.l2] = (aggregatedData[d.l2] || 0) + d.count; });
-            } else if (currentDrillLevel === 3) {
-                document.getElementById('btnBack').style.display = 'block'; breadcrumbText += `🔍 肇因鑽研：原因三階 [隸屬 ${selectedL2}]`;
-                cData.filter(d => d.l1 === selectedL1 && d.l2 === selectedL2).forEach(d => { aggregatedData[d.l3] = (aggregatedData[d.l3] || 0) + d.count; });
-            }
-
-            const sortedKeys = Object.keys(aggregatedData).sort((a, b) => aggregatedData[b] - aggregatedData[a]);
-            causeChart.data.labels = sortedKeys;
-            causeChart.data.datasets[0].data = sortedKeys.map(k => aggregatedData[k]);
-            
-            if (currentDrillLevel === 1) { causeChart.data.datasets[0].backgroundColor = sortedKeys.map(() => DEPTH_COLORS[1]); } 
-            else if (currentDrillLevel === 2) { causeChart.data.datasets[0].backgroundColor = sortedKeys.map(() => DEPTH_COLORS[2]); } 
-            else if (currentDrillLevel === 3) {
-                causeChart.data.datasets[0].backgroundColor = sortedKeys.map(k => (selectedL3 === null || selectedL3 === k) ? (selectedL3 === k ? FOCUS_COLOR : DEPTH_COLORS[3]) : FADE_COLOR );
-            }
-            causeChart.update();
-            
-            document.getElementById('causeBreadcrumb').innerText = breadcrumbText;
-            document.getElementById('dataSummary').innerText = `📊 目前條件符合共 ${topData.length} 筆紀錄 (累計 ${topData.reduce((sum, d) => sum + d.count, 0)} 件)`;
-
-            // 5. 底層：連動階層熱區矩陣 (最後渲染確保讀取到最新的鑽研階層)
-            renderHeatmap(topData);
-        }
-
-        function drillDown(label) {
-            if (currentDrillLevel === 1) { selectedL1 = label; currentDrillLevel = 2; } 
-            else if (currentDrillLevel === 2) { selectedL2 = label; currentDrillLevel = 3; } 
-            else if (currentDrillLevel === 3) { selectedL3 = (selectedL3 === label) ? null : label; }
-            updateAllCharts();
-        }
-
-        function goBackLevel() {
-            if (currentDrillLevel === 3) { if (selectedL3 !== null) { selectedL3 = null; } else { currentDrillLevel = 2; selectedL2 = null; } } 
-            else if (currentDrillLevel === 2) { currentDrillLevel = 1; selectedL1 = null; }
-            updateAllCharts();
         }
     </script>
 </body>
