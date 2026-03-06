@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事故事件動態分析看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 暗黑戰情室背景與字體 */
+        body { font-family: '微軟正黑體', sans-serif; background-color: #111217; margin: 0; padding: 20px; color: #C8D4E3; }
+        h1 { text-align: center; color: #E8F0FE; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .subtitle { text-align: center; color: #8E9BAE; margin-bottom: 20px; font-weight: bold; }
+        
+        /* 網格佈局 */
+        .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        .grid-top { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .grid-bottom { display: grid; grid-template-columns: 1fr 1.5fr; gap: 15px; }
+        
+        /* 戰情面板樣式 */
+        .panel { background-color: #181B1F; border: 1px solid #2B2D37; border-radius: 6px; padding: 15px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .panel-title { font-size: 14px; font-weight: bold; color: #8E9BAE; margin-bottom: 10px; border-bottom: 1px solid #2B2D37; padding-bottom: 8px; }
+        .chart-container { position: relative; height: 260px; width: 100%; }
+        .tall-container { height: 380px; }
+        
+        /* 頂部大數字 (BANs) */
+        .stat-value { font-size: 38px; font-weight: bold; text-align: center; margin-top: 10px; font-family: 'Arial', sans-serif;}
+        .stat-label { font-size: 13px; text-align: center; color: #6C7A92; margin-top: 5px; }
+        
+        /* 工具列與按鈕 */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .breadcrumb { font-size: 13px; color: #FF9830; background: rgba(255, 152, 48, 0.1); padding: 8px 12px; border-radius: 4px; border: 1px solid rgba(255, 152, 48, 0.3); }
+        .btn-action { background-color: #32CEE6; color: #111217; cursor: pointer; border: none; font-weight: bold; padding: 6px 15px; border-radius: 4px; transition: all 0.2s; font-size: 13px; }
+        .btn-action:hover { background-color: #28A6B9; box-shadow: 0 0 10px rgba(50, 206, 230, 0.4); }
+        .btn-reset { background-color: transparent; color: #8E9BAE; border: 1px solid #8E9BAE; }
+        .btn-reset:hover { background-color: #2B2D37; color: #FFF; }
+
+        /* 熱力矩陣 (暗黑版) */
+        .heatmap-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 5px; }
+        .heatmap-table th { background-color: #181B1F; color: #8E9BAE; padding: 8px; border-bottom: 1px solid #2B2D37; font-weight: normal; text-align: center; width: 15%; }
+        .heatmap-table td { border: 1px solid #111217; padding: 10px; text-align: center; font-weight: bold; transition: opacity 0.2s; }
+        .heatmap-table td.row-header { background-color: #181B1F; color: #C8D4E3; text-align: left; padding-left: 10px; border-right: 1px solid #2B2D37; font-weight: normal; width: 40%; }
+        .heatmap-table td.data-cell:hover { opacity: 0.8; outline: 1px solid #32CEE6; cursor: crosshair; }
+        
+        .hint { font-size: 12px; color: #5C677D; text-align: center; margin-top: 8px; }
+
+        /* ===== 響應式：依螢幕解析度最佳呈現 ===== */
+        @media (min-width: 1600px) {
+            body { padding: 24px; max-width: 1920px; margin: 0 auto; }
+            .chart-container { height: 280px; }
+            .tall-container { height: 420px; }
+            .stat-value { font-size: 42px; }
+        }
+        @media (min-width: 768px) and (max-width: 1199px) {
+            body { padding: 16px; }
+            .grid-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .grid-top { grid-template-columns: 1fr 1fr; }
+            .grid-top .panel:first-child { grid-column: 1 / -1; }
+            .grid-top .chart-container { height: 240px; }
+            .grid-bottom { grid-template-columns: 1fr; }
+            .tall-container { height: 360px; }
+            .chart-container { height: 240px; }
+            #heatmapContainer, .grid-bottom .chart-container { height: 300px !important; }
+            .stat-value { font-size: 32px; }
+            .heatmap-table { font-size: 12px; }
+        }
+        @media (min-width: 576px) and (max-width: 767px) {
+            body { padding: 12px; }
+            h1 { font-size: 1.3rem; }
+            .toolbar { flex-wrap: wrap; gap: 10px; }
+            .grid-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .grid-top { grid-template-columns: 1fr; gap: 12px; }
+            .grid-top .panel:first-child { grid-column: auto; }
+            .grid-bottom { grid-template-columns: 1fr; gap: 12px; }
+            .chart-container { height: 220px; }
+            .tall-container { height: 320px; }
+            #heatmapContainer, .grid-bottom .chart-container { height: 260px !important; }
+            .panel { padding: 12px; }
+            .stat-value { font-size: 28px; }
+            .stat-label { font-size: 12px; }
+            .heatmap-table { font-size: 12px; display: block; overflow-x: auto; }
+            .heatmap-table th, .heatmap-table td { padding: 6px; min-width: 55px; }
+            .heatmap-table td.row-header { min-width: 130px; }
+        }
+        @media (max-width: 575px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.1rem; }
+            .subtitle { font-size: 0.9rem; margin-bottom: 12px; }
+            .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+            .grid-stats { grid-template-columns: 1fr; gap: 8px; }
+            .grid-top, .grid-bottom { grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px; }
+            .grid-top .panel:first-child { grid-column: auto; }
+            .chart-container { height: 200px; }
+            .tall-container { height: 280px; }
+            #heatmapContainer, .grid-bottom .chart-container { height: 220px !important; }
+            .panel { padding: 10px; }
+            .panel-title { font-size: 13px; }
+            .stat-value { font-size: 26px; }
+            .stat-label { font-size: 11px; }
+            .btn-action { padding: 5px 12px; font-size: 12px; }
+            .panel-title[style*="display: flex"] { flex-wrap: wrap; gap: 6px; }
+            .heatmap-table { font-size: 11px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .heatmap-table th, .heatmap-table td { padding: 5px; min-width: 48px; }
+            .heatmap-table td.row-header { min-width: 110px; font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🚆 事故事件動態分析看板</h1>
+    <div class="subtitle">點擊圖表可進行分析</div>
+
+    <div class="grid-stats">
+        <div class="panel" style="border-top: 3px solid #C8D4E3;">
+            <div class="stat-value" id="statTotal" style="color: #FFFFFF;">--</div>
+            <div class="stat-label">當前篩選累計件數</div>
+        </div>
+        <div class="panel" style="border-top: 3px solid #E02F44;">
+            <div class="stat-value" id="statMajor" style="color: #E02F44; text-shadow: 0 0 10px rgba(224,47,68,0.3);">--</div>
+            <div class="stat-label">重大行車事故</div>
+        </div>
+        <div class="panel" style="border-top: 3px solid #FF9830;">
+            <div class="stat-value" id="statGeneral" style="color: #FF9830; text-shadow: 0 0 10px rgba(255,152,48,0.3);">--</div>
+            <div class="stat-label">一般行車事故</div>
+        </div>
+        <div class="panel" style="border-top: 3px solid #32CEE6;">
+            <div class="stat-value" id="statAnomaly" style="color: #32CEE6; text-shadow: 0 0 10px rgba(50,206,230,0.3);">--</div>
+            <div class="stat-label">異常事件</div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div id="filterBreadcrumb" class="breadcrumb" style="visibility: hidden;">目前已套用篩選器</div>
+        <button class="btn-action btn-reset" onclick="resetDashboard()">🔄 清除所有過濾條件</button>
+    </div>
+
+    <div class="grid-top">
+        <div class="panel">
+            <div class="panel-title">事故發生趨勢</div>
+            <div class="chart-container"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">營運機構佔比 (點擊過濾)</div>
+            <div class="chart-container"><canvas id="operatorPieChart"></canvas></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">事件分類佔比 (點擊過濾)</div>
+            <div class="chart-container"><canvas id="classPieChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="grid-bottom">
+        <div class="panel tall-container">
+            <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="causeTitle">肇因深度鑽研</span>
+                <button id="btnBack" class="btn-action" onclick="goBackLevel()" style="display:none; padding: 3px 10px; font-size:12px;">⤴ 返回上一層</button>
+            </div>
+            <div class="chart-container" style="height: 310px;"><canvas id="causeChart"></canvas></div>
+        </div>
+
+        <div class="panel tall-container">
+            <div class="panel-title" id="heatmapTitle">營運機構 vs 肇因 熱區矩陣 (連動展延)</div>
+            <div id="heatmapContainer" style="overflow-y: auto; height: 310px;">系統運算矩陣中...</div>
+        </div>
+    </div>
+
+    <script>
+        // 設定 Chart.js 為暗黑戰情室風格
+        Chart.defaults.color = '#8E9BAE';
+        Chart.defaults.borderColor = '#2B2D37';
+        Chart.defaults.font.family = "'微軟正黑體', sans-serif";
+
+        const operators = ['臺鐵', '高鐵', '林鐵', '糖鐵'];
+        const months = ['114/08', '114/09', '114/10', '114/11', '114/12', '115/01', '115/02'];
+        
+        // 科技感 CI 色彩 + 警示色彩
+        const OP_COLORS = { '臺鐵': '#42A5F5', '高鐵': '#FF7043', '林鐵': '#66BB6A', '糖鐵': '#D4E157' }; // 調亮以適應黑底
+        const CLS_COLORS = { '重大行車事故': '#E02F44', '一般行車事故': '#FF9830', '異常事件': '#32CEE6' };
+        const DEPTH_COLORS = { 1: '#475569', 2: '#64748B', 3: '#94A3B8' };
+        const FOCUS_COLOR = '#32CEE6'; 
+        const FADE_COLOR = '#1E2228';  
+
+        const causeTemplates = [
+            { class: '異常事件', type: '列車或車輛故障', l1: '1.鐵路設備功能異常', l2: '1.01車輛設備功能異常', l3: '1.01.01動力系統異常' },
+            { class: '異常事件', type: '列車或車輛故障', l1: '1.鐵路設備功能異常', l2: '1.01車輛設備功能異常', l3: '1.01.03機(臺鐵、林鐵)/煞車(高鐵)異常' },
+            { class: '異常事件', type: '運轉保安裝置故障', l1: '1.鐵路設備功能異常', l2: '1.02運轉保安功能異常', l3: '1.02.01轉轍器定位異常' },
+            { class: '重大行車事故', type: '正線出軌事故', l1: '1.鐵路設備功能異常', l2: '1.04軌道設備異常', l3: '1.04.01鋼軌斷裂' },
+            { class: '異常事件', type: '違反號誌運轉', l1: '2.員工與承商因素', l2: '2.01鐵路員工疏失', l3: '2.01.09未確認號誌標誌' },
+            { class: '重大行車事故', type: '正線衝撞事故', l1: '2.員工與承商因素', l2: '2.01鐵路員工疏失', l3: '2.01.11未遵守程序操作' },
+            { class: '一般行車事故', type: '出軌事故', l1: '2.員工與承商因素', l2: '2.02承包商疏失', l3: '2.02.01侵入路線淨空' },
+            { class: '一般行車事故', type: '平交道事故', l1: '3.民眾與旅客因素', l2: '3.02民眾闖入軌道', l3: '3.02.01民眾/汽機車闖入' },
+            { class: '一般行車事故', type: '死傷事故', l1: '3.民眾與旅客因素', l2: '3.03旅客跌落月台', l3: '3.03.01旅客闖入/跌落' },
+            { class: '異常事件', type: '外物入侵', l1: '4.外物因素', l2: '4.01動物入侵', l3: '4.01.01動物入侵路線' },
+            { class: '異常事件', type: '天然災變', l1: '5.天然因素', l2: '5.01氣候異常', l3: '5.01.01豪大雨' }
+        ];
+
+        let rawData = [];
+        for (let i = 0; i < 5000; i++) {
+            let opRand = Math.random();
+            let selectedOp = opRand < 0.75 ? '臺鐵' : (opRand < 0.90 ? '高鐵' : (opRand < 0.97 ? '林鐵' : '糖鐵'));
+            let selectedTemplate = causeTemplates[Math.floor(Math.random() * causeTemplates.length)];
+            let m = months[Math.floor(Math.random() * months.length)];
+            let randomCount = Math.floor(Math.random() * 10) < 9 ? 1 : 2;
+
+            rawData.push({
+                operator: selectedOp, month: m,
+                class: selectedTemplate.class, type: selectedTemplate.type,
+                l1: selectedTemplate.l1, l2: selectedTemplate.l2, l3: selectedTemplate.l3,
+                count: randomCount
+            });
+        }
+
+        let trendChart, operatorPieChart, classPieChart, causeChart;
+        
+        // 全域過濾狀態
+        let state = { op: null, cls: null, l1: null, l2: null, l3: null, drillLevel: 1 };
+
+        function getResponsiveFontSizes() {
+            const w = window.innerWidth;
+            if (w >= 1600) return { title: 14, tick: 11 };
+            if (w >= 1200) return { title: 13, tick: 10 };
+            if (w >= 768) return { title: 12, tick: 9 };
+            if (w >= 576) return { title: 11, tick: 8 };
+            return { title: 10, tick: 7 };
+        }
+
+        function applyResponsiveFonts() {
+            const fs = getResponsiveFontSizes();
+            const w = window.innerWidth;
+            const pieLegendPos = w < 768 ? 'bottom' : 'right';
+            const charts = [trendChart, operatorPieChart, classPieChart, causeChart];
+            charts.forEach((ch, i) => {
+                if (!ch) return;
+                if (ch.options.plugins?.title) {
+                    const t = ch.options.plugins.title;
+                    t.font = { ...(t.font || {}), size: fs.title };
+                }
+                if (ch.options.plugins?.legend) {
+                    if (ch === operatorPieChart || ch === classPieChart) ch.options.plugins.legend.position = pieLegendPos;
+                    if (ch.options.plugins.legend.labels) {
+                        ch.options.plugins.legend.labels.font = { ...(ch.options.plugins.legend.labels.font || {}), size: fs.tick };
+                    }
+                }
+                if (ch.options.scales) {
+                    ['x', 'y'].forEach(axis => {
+                        const ticks = ch.options.scales[axis]?.ticks;
+                        if (ticks) ticks.font = { ...(ticks.font || {}), size: fs.tick };
+                    });
+                }
+                try { ch.update('resize'); } catch (_) { ch.update(); }
+            });
+        }
+
+        let resizeTimer;
+        window.onload = function() { initCharts(); updateDashboard(); applyResponsiveFonts(); };
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(applyResponsiveFonts, 150);
+        });
+
+        function initCharts() {
+            trendChart = new Chart(document.getElementById('trendChart'), {
+                type: 'line', data: { labels: months, datasets: [] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } }, 
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, border: { dash: [4, 4] } } },
+                    elements: { line: { tension: 0.4, borderWidth: 2 }, point: { radius: 0, hoverRadius: 6 } }
+                }
+            });
+
+            operatorPieChart = new Chart(document.getElementById('operatorPieChart'), {
+                type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 2, borderColor: '#111217' }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'right', labels: { usePointStyle: true } } },
+                    onClick: (e, el) => { if(el.length>0) { state.op = state.op === operatorPieChart.data.labels[el[0].index] ? null : operatorPieChart.data.labels[el[0].index]; updateDashboard(); } }
+                }
+            });
+
+            classPieChart = new Chart(document.getElementById('classPieChart'), {
+                type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 2, borderColor: '#111217' }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'right', labels: { usePointStyle: true } } },
+                    onClick: (e, el) => { if(el.length>0) { state.cls = state.cls === classPieChart.data.labels[el[0].index] ? null : classPieChart.data.labels[el[0].index]; updateDashboard(); } }
+                }
+            });
+
+            causeChart = new Chart(document.getElementById('causeChart'), {
+                type: 'bar', data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4 }] },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
+                    plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { display: false } } },
+                    onClick: (e, el) => { if(el.length>0) drillDown(causeChart.data.labels[el[0].index]); }
+                }
+            });
+        }
+
+        function resetDashboard() {
+            state = { op: null, cls: null, l1: null, l2: null, l3: null, drillLevel: 1 };
+            updateDashboard();
+        }
+
+        function drillDown(label) {
+            if (state.drillLevel === 1) { state.l1 = label; state.drillLevel = 2; } 
+            else if (state.drillLevel === 2) { state.l2 = label; state.drillLevel = 3; } 
+            else if (state.drillLevel === 3) { state.l3 = state.l3 === label ? null : label; }
+            updateDashboard();
+        }
+
+        function goBackLevel() {
+            if (state.drillLevel === 3) { if (state.l3) state.l3 = null; else { state.drillLevel = 2; state.l2 = null; } } 
+            else if (state.drillLevel === 2) { state.drillLevel = 1; state.l1 = null; }
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            // 1. 取得過濾後資料
+            let filtered = rawData.filter(d => 
+                (!state.op || d.operator === state.op) &&
+                (!state.cls || d.class === state.cls) &&
+                (!state.l1 || d.l1 === state.l1) &&
+                (!state.l2 || d.l2 === state.l2) &&
+                (!state.l3 || d.l3 === state.l3)
+            );
+
+            // 2. 更新頂部指標 (Cards)
+            let stats = { total: 0, major: 0, general: 0, anomaly: 0 };
+            filtered.forEach(d => {
+                stats.total += d.count;
+                if (d.class === '重大行車事故') stats.major += d.count;
+                if (d.class === '一般行車事故') stats.general += d.count;
+                if (d.class === '異常事件') stats.anomaly += d.count;
+            });
+            document.getElementById('statTotal').innerText = stats.total.toLocaleString();
+            document.getElementById('statMajor').innerText = stats.major.toLocaleString();
+            document.getElementById('statGeneral').innerText = stats.general.toLocaleString();
+            document.getElementById('statAnomaly').innerText = stats.anomaly.toLocaleString();
+
+            // 更新麵包屑
+            let filterText = [];
+            if(state.op) filterText.push(`機構: ${state.op}`);
+            if(state.cls) filterText.push(`分類: ${state.cls}`);
+            let breadcrumbEl = document.getElementById('filterBreadcrumb');
+            if(filterText.length > 0) { breadcrumbEl.innerText = `🔍 套用條件：${filterText.join(' ｜ ')}`; breadcrumbEl.style.visibility = 'visible'; } 
+            else { breadcrumbEl.style.visibility = 'hidden'; }
+
+            // 3. 趨勢圖 (區域面積圖)
+            const trendData = { '重大行車事故': {}, '一般行車事故': {}, '異常事件': {} };
+            months.forEach(t => { trendData['重大行車事故'][t] = 0; trendData['一般行車事故'][t] = 0; trendData['異常事件'][t] = 0; });
+            filtered.forEach(d => { if(trendData[d.class][d.month] !== undefined) trendData[d.class][d.month] += d.count; });
+            
+            trendChart.data.datasets = [
+                { label: '重大', data: months.map(t => trendData['重大行車事故'][t]), borderColor: CLS_COLORS['重大行車事故'], backgroundColor: 'rgba(224, 47, 68, 0.15)', fill: true, hidden: state.cls && state.cls !== '重大行車事故' },
+                { label: '一般', data: months.map(t => trendData['一般行車事故'][t]), borderColor: CLS_COLORS['一般行車事故'], backgroundColor: 'rgba(255, 152, 48, 0.15)', fill: true, hidden: state.cls && state.cls !== '一般行車事故' },
+                { label: '異常', data: months.map(t => trendData['異常事件'][t]), borderColor: CLS_COLORS['異常事件'], backgroundColor: 'rgba(50, 206, 230, 0.15)', fill: true, hidden: state.cls && state.cls !== '異常事件' }
+            ];
+            trendChart.update();
+
+            // 4. 圓餅圖更新 (包含未選取反灰邏輯)
+            const opData = filtered.reduce((acc, curr) => { acc[curr.operator] = (acc[curr.operator] || 0) + curr.count; return acc; }, {});
+            operatorPieChart.data.labels = operators.filter(op => opData[op] !== undefined || !state.op); // 保持選項
+            operatorPieChart.data.datasets[0].data = operatorPieChart.data.labels.map(op => opData[op] || 0);
+            operatorPieChart.data.datasets[0].backgroundColor = operatorPieChart.data.labels.map(op => (!state.op || state.op === op) ? OP_COLORS[op] : FADE_COLOR);
+            operatorPieChart.update();
+
+            const clsOrder = ['重大行車事故', '一般行車事故', '異常事件'];
+            const classData = filtered.reduce((acc, curr) => { acc[curr.class] = (acc[curr.class] || 0) + curr.count; return acc; }, {});
+            classPieChart.data.labels = clsOrder.filter(cls => classData[cls] !== undefined || !state.cls);
+            classPieChart.data.datasets[0].data = classPieChart.data.labels.map(cls => classData[cls] || 0);
+            classPieChart.data.datasets[0].backgroundColor = classPieChart.data.labels.map(cls => (!state.cls || state.cls === cls) ? CLS_COLORS[cls] : FADE_COLOR);
+            classPieChart.update();
+
+            // 5. 肇因鑽研圖
+            let aggData = {}; let causeTitleStr = "肇因深度鑽研 (目前：一階)";
+            if (state.drillLevel === 1) {
+                document.getElementById('btnBack').style.display = 'none';
+                filtered.forEach(d => { aggData[d.l1] = (aggData[d.l1] || 0) + d.count; });
+            } else if (state.drillLevel === 2) {
+                document.getElementById('btnBack').style.display = 'inline-block'; causeTitleStr = `二階肇因 (隸屬：${state.l1})`;
+                filtered.forEach(d => { aggData[d.l2] = (aggData[d.l2] || 0) + d.count; });
+            } else if (state.drillLevel === 3) {
+                document.getElementById('btnBack').style.display = 'inline-block'; causeTitleStr = `三階肇因 (隸屬：${state.l2})`;
+                filtered.forEach(d => { aggData[d.l3] = (aggData[d.l3] || 0) + d.count; });
+            }
+            document.getElementById('causeTitle').innerText = causeTitleStr;
+
+            const sortedKeys = Object.keys(aggData).sort((a, b) => aggData[b] - aggData[a]);
+            causeChart.data.labels = sortedKeys;
+            causeChart.data.datasets[0].data = sortedKeys.map(k => aggData[k]);
+            causeChart.data.datasets[0].backgroundColor = sortedKeys.map(k => {
+                if(state.drillLevel === 3 && state.l3) return state.l3 === k ? FOCUS_COLOR : FADE_COLOR;
+                return DEPTH_COLORS[state.drillLevel];
+            });
+            causeChart.update();
+
+            // 6. 熱區矩陣
+            renderHeatmap(filtered);
+        }
+
+        function renderHeatmap(data) {
+            let rowField = state.drillLevel === 1 ? 'l1' : (state.drillLevel === 2 ? 'l2' : 'l3');
+            let rowLabel = state.drillLevel === 1 ? '一階肇因' : (state.drillLevel === 2 ? '二階肇因' : '三階肇因');
+            document.getElementById('heatmapTitle').innerText = `營運機構 vs ${rowLabel} 熱區矩陣`;
+
+            let currentRows = [...new Set(data.map(d => d[rowField]))].sort();
+            if(currentRows.length === 0) currentRows = [...new Set(causeTemplates.map(t => t[rowField]))].sort();
+
+            let matrix = {}; let maxCount = 0;
+            currentRows.forEach(r => { matrix[r] = {}; operators.forEach(op => { matrix[r][op] = 0; }); });
+            data.forEach(d => { if (matrix[d[rowField]] && matrix[d[rowField]][d.operator] !== undefined) matrix[d[rowField]][d.operator] += d.count; });
+            currentRows.forEach(r => { operators.forEach(op => { if(matrix[r][op] > maxCount) maxCount = matrix[r][op]; }); });
+
+            let html = '<table class="heatmap-table">';
+            html += `<tr><th>(${rowLabel}) ↓ vs 機構 →</th>` + operators.map(op => `<th>${op}</th>`).join('') + '</tr>';
+            
+            currentRows.forEach(r => {
+                html += `<tr><td class="row-header">${r}</td>`;
+                operators.forEach(op => {
+                    let val = matrix[r][op];
+                    let intensity = maxCount === 0 ? 0 : (val / maxCount);
+                    // 警示紅漸層
+                    let bgCol = val === 0 ? '#181B1F' : `rgba(224, 47, 68, ${0.1 + intensity*0.9})`; 
+                    let fgCol = intensity > 0.4 ? '#FFFFFF' : (val > 0 ? '#E8F0FE' : '#2B2D37');
+                    html += `<td class="data-cell" style="background-color: ${bgCol}; color: ${fgCol};">${val > 0 ? val : '-'}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            document.getElementById('heatmapContainer').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
