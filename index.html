@@ -61,18 +61,6 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 px-2 gap-2">
             <h1 class="text-2xl font-bold tracking-wider text-white">🚊 營運監理綜合看板-構想(非正式)</h1>
             <div class="flex items-center gap-4 flex-wrap">
-                <div class="date-range-container">
-                    <span class="text-xs text-gray-400 font-bold">全域區間:</span>
-                    <select class="date-picker-box" id="g-start" onchange="updateAllDashboards()">
-                        <option value="0">114年10月</option><option value="1">114年11月</option><option value="2">114年12月</option>
-                        <option value="3">115年01月</option><option value="4" selected>115年02月</option><option value="5">115年03月</option>
-                    </select>
-                    <span class="text-gray-400 font-bold text-sm">至</span>
-                    <select class="date-picker-box" id="g-end" onchange="updateAllDashboards()">
-                        <option value="0">114年10月</option><option value="1">114年11月</option><option value="2">114年12月</option>
-                        <option value="3">115年01月</option><option value="4" selected>115年02月</option><option value="5">115年03月</option>
-                    </select>
-                </div>
                 <div class="text-sm text-gray-400 bg-gray-800 px-4 py-1.5 rounded border border-gray-600">點擊各板塊進入深度分析</div>
             </div>
         </div>
@@ -82,22 +70,22 @@
                 <div class="text-lg font-bold border-b-2 border-blue-500 pb-2 mb-3 flex justify-between"><span class="text-blue-400">📊 1. 營運服務監理</span><span class="text-xs text-gray-500">詳情 ➔</span></div>
                 <div class="flex flex-wrap sm:flex-nowrap justify-between mb-2 gap-2">
                     <div class="kpi-block-main min-w-[120px]" style="border-color: #3b82f6;"><div class="text-2xl font-bold text-blue-400" id="main-kpi-punctual">99.2%</div><div class="text-xs text-gray-400 mt-1">全線準點率 (區間均值)</div></div>
-                    <div class="kpi-block-main min-w-[120px]" style="border-color: #60a5fa;"><div class="text-2xl font-bold text-white"><span id="main-kpi-pax">628.3</span><span class="text-sm font-normal">萬</span></div><div class="text-xs text-gray-400 mt-1">區間總旅客人數</div></div>
+                    <div class="kpi-block-main min-w-[120px]" style="border-color: #60a5fa;"><div class="text-2xl font-bold text-white"><span id="main-kpi-pax">628.3</span><span class="text-sm font-normal">萬</span></div><div class="text-xs text-gray-400 mt-1">總旅客人數</div></div>
                 </div>
                 <div class="flex-1 relative mt-2"><canvas id="mainOpChart"></canvas></div>
             </div>
             <div class="panel clickable min-h-[350px]" onclick="navTo('detail-safety')">
                 <div class="text-lg font-bold border-b-2 border-red-500 pb-2 mb-3 flex justify-between"><span class="text-red-400">🛡️ 2. 行車安全分析</span><span class="text-xs text-gray-500">詳情 ➔</span></div>
                 <div class="flex flex-wrap sm:flex-nowrap justify-between mb-2 gap-2">
-                    <div class="kpi-block-main min-w-[120px]" style="border-color: #ef4444;"><div class="text-2xl font-bold text-red-500" id="main-kpi-major">14</div><div class="text-xs text-gray-400 mt-1">區間重大事故</div></div>
-                    <div class="kpi-block-main min-w-[120px]" style="border-color: #f87171;"><div class="text-2xl font-bold text-white" id="main-kpi-abnormal">431</div><div class="text-xs text-gray-400 mt-1">區間異常事件</div></div>
+                    <div class="kpi-block-main min-w-[120px]" style="border-color: #ef4444;"><div class="text-2xl font-bold text-red-500" id="main-kpi-major">14</div><div class="text-xs text-gray-400 mt-1">重大事故</div></div>
+                    <div class="kpi-block-main min-w-[120px]" style="border-color: #f87171;"><div class="text-2xl font-bold text-white" id="main-kpi-abnormal">431</div><div class="text-xs text-gray-400 mt-1">異常事件</div></div>
                 </div>
                 <div class="flex-1 relative mt-2"><canvas id="mainSafetyChart"></canvas></div>
             </div>
             <div class="panel clickable min-h-[350px]" onclick="navTo('detail-inspect')">
                 <div class="text-lg font-bold border-b-2 border-yellow-500 pb-2 mb-3 flex justify-between"><span class="text-yellow-400">📋 3. 檢查結果列管追蹤</span><span class="text-xs text-gray-500">詳情 ➔</span></div>
                 <div class="flex flex-wrap sm:flex-nowrap justify-between mb-2 gap-2">
-                    <div class="kpi-block-main min-w-[120px]" style="border-color: #f59e0b;"><div class="text-2xl font-bold text-yellow-500" id="main-kpi-issue">42</div><div class="text-xs text-gray-400 mt-1">區間累積發現問題</div></div>
+                    <div class="kpi-block-main min-w-[120px]" style="border-color: #f59e0b;"><div class="text-2xl font-bold text-yellow-500" id="main-kpi-issue">42</div><div class="text-xs text-gray-400 mt-1">累積發現問題</div></div>
                     <div class="kpi-block-main min-w-[120px]" style="border-color: #fbbf24;"><div class="text-2xl font-bold text-red-400" id="main-kpi-overdue">24</div><div class="text-xs text-gray-400 mt-1">期末未結案警示</div></div>
                 </div>
                 <div class="flex-1 relative mt-2"><canvas id="mainInspectChart"></canvas></div>
@@ -105,8 +93,8 @@
             <div class="panel clickable min-h-[350px]" onclick="navTo('detail-equip')">
                 <div class="text-lg font-bold border-b-2 border-green-500 pb-2 mb-3 flex justify-between"><span class="text-green-400">⚙️ 4. 設備可靠度監理</span><span class="text-xs text-gray-500">詳情 ➔</span></div>
                 <div class="flex flex-wrap sm:flex-nowrap justify-between mb-2 gap-2">
-                    <div class="kpi-block-main min-w-[120px]" style="border-color: #10b981;"><div class="text-2xl font-bold text-green-500" id="main-kpi-delay">1,420</div><div class="text-xs text-gray-400 mt-1">區間總延誤分鐘數</div></div>
-                    <div class="kpi-block-main min-w-[120px]" style="border-color: #34d399;"><div class="text-2xl font-bold text-white" id="main-kpi-equip">142</div><div class="text-xs text-gray-400 mt-1">區間異常通報總計</div></div>
+                    <div class="kpi-block-main min-w-[120px]" style="border-color: #10b981;"><div class="text-2xl font-bold text-green-500" id="main-kpi-delay">1,420</div><div class="text-xs text-gray-400 mt-1">總延誤分鐘數</div></div>
+                    <div class="kpi-block-main min-w-[120px]" style="border-color: #34d399;"><div class="text-2xl font-bold text-white" id="main-kpi-equip">142</div><div class="text-xs text-gray-400 mt-1">異常通報總計</div></div>
                 </div>
                 <div class="flex-1 relative mt-2"><canvas id="mainEquipChart"></canvas></div>
             </div>
@@ -130,7 +118,7 @@
                 </div>
             </div>
             <div class="panel lg:col-span-5 p-3 flex flex-row justify-between items-center">
-                <div class="panel-title mb-0">資料區間 (區間篩選器)</div>
+                <div class="panel-title mb-0">資料區間</div>
                 <div class="date-range-container border-none bg-transparent p-0">
                     <select class="date-picker-box" id="t1-start" onchange="updateOpDashboard()">
                         <option value="0">114年10月</option><option value="1">114年11月</option><option value="2">114年12月</option>
@@ -146,17 +134,17 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
-            <div class="panel border-t-2 border-white py-2"><div class="kpi-value-detail text-white text-3xl" id="t1-pax">6,282,609</div><div class="kpi-title-detail mt-2">區間累計旅客人數</div></div>
-            <div class="panel border-t-2 border-amber-500 py-2"><div class="kpi-value-detail text-amber-500 text-3xl" id="t1-seat">71.5%</div><div class="kpi-title-detail mt-2">區間平均座位利用率</div></div>
-            <div class="panel border-t-2 border-emerald-500 py-2"><div class="kpi-value-detail text-emerald-400 text-3xl" id="t1-dispatch">99.9%</div><div class="kpi-title-detail mt-2">區間平均發車率</div></div>
-            <div class="panel border-t-2 border-cyan-500 py-2"><div class="kpi-value-detail text-cyan-500 text-3xl" id="t1-punctual">99.2%</div><div class="kpi-title-detail mt-2">區間平均準點率</div></div>
+            <div class="panel border-t-2 border-white py-2"><div class="kpi-value-detail text-white text-3xl" id="t1-pax">6,282,609</div><div class="kpi-title-detail mt-2">累計旅客人數</div></div>
+            <div class="panel border-t-2 border-amber-500 py-2"><div class="kpi-value-detail text-amber-500 text-3xl" id="t1-seat">71.5%</div><div class="kpi-title-detail mt-2">平均座位利用率</div></div>
+            <div class="panel border-t-2 border-emerald-500 py-2"><div class="kpi-value-detail text-emerald-400 text-3xl" id="t1-dispatch">99.9%</div><div class="kpi-title-detail mt-2">平均發車率</div></div>
+            <div class="panel border-t-2 border-cyan-500 py-2"><div class="kpi-value-detail text-cyan-500 text-3xl" id="t1-punctual">99.2%</div><div class="kpi-title-detail mt-2">平均準點率</div></div>
         </div>
         
         <div class="flex flex-col xl:flex-row gap-4 mb-3">
             <div class="w-full xl:w-2/3 flex flex-col gap-4">
                 <div class="flex flex-col lg:flex-row gap-4">
                     <div class="panel w-full lg:w-1/2 p-3 min-h-[250px]"><div class="panel-title">歷年平均日運量與乘載率</div><div class="flex-1 relative"><canvas id="opYearlyChart"></canvas></div></div>
-                    <div class="panel w-full lg:w-1/2 p-3 min-h-[250px]"><div class="panel-title">區間各站累計進出旅客量(人)</div><div class="flex-1 relative"><canvas id="opStationChart"></canvas></div></div>
+                    <div class="panel w-full lg:w-1/2 p-3 min-h-[250px]"><div class="panel-title">各站累計進出旅客量(人)</div><div class="flex-1 relative"><canvas id="opStationChart"></canvas></div></div>
                 </div>
                 <div class="flex flex-col lg:flex-row gap-4">
                     <div class="panel w-full lg:w-1/2 p-3 min-h-[250px]"><div class="panel-title">12個月平均每日列車班次、運量及乘載率</div><div class="flex-1 relative"><canvas id="opMonthlyTrend"></canvas></div></div>
@@ -178,7 +166,7 @@
                 <div class="panel-title">車站地圖與瓶頸壓力分析</div>
                 <div class="bg-gray-800 p-2 rounded border border-gray-600 mb-2 z-10 relative shadow-lg mx-2 text-xs">
                     <div class="flex justify-between border-b border-gray-600 pb-1 mb-1"><span class="text-cyan-400">▍ 壓力最高站名</span><span class="text-white font-bold" id="t1-top-station">南港</span></div>
-                    <div class="flex justify-between mb-1"><span class="text-gray-400">▍ 區間佔比</span><span class="text-amber-500" id="t1-top-ratio">12.5%</span></div>
+                    <div class="flex justify-between mb-1"><span class="text-gray-400">▍ 佔比</span><span class="text-amber-500" id="t1-top-ratio">12.5%</span></div>
                     <div class="flex justify-between mb-1"><span class="text-gray-400">▍ 累計進站</span><span class="text-white" id="t1-top-in">85,240</span></div>
                     <div class="flex justify-between"><span class="text-gray-400">▍ 累計出站</span><span class="text-white" id="t1-top-out">86,110</span></div>
                 </div>
@@ -201,11 +189,11 @@
         </div>
 
         <div class="panel w-full p-3 overflow-x-auto">
-            <div class="panel-title">重要指標 區間總計 vs 去年同期比較表</div>
+            <div class="panel-title">重要指標 總計 vs 去年同期比較表</div>
             <div class="min-w-[600px] mt-1"><table class="w-full text-right text-xs">
-                <thead><tr><th class="text-left" style="width: 25%;">項目</th><th class="text-right">區間總計 / 平均</th><th class="text-right">與去年同期比</th></tr></thead>
+                <thead><tr><th class="text-left" style="width: 25%;">項目</th><th class="text-right">總計 / 平均</th><th class="text-right">與去年同期比</th></tr></thead>
                 <tbody>
-                    <tr><td class="text-left bg-gray-800">區間旅客人數(累計)</td><td class="text-white" id="t1-tbl-pax">6,282,609 人</td><td class="text-gray-400">+2.4%</td></tr>
+                    <tr><td class="text-left bg-gray-800">旅客人數(累計)</td><td class="text-white" id="t1-tbl-pax">6,282,609 人</td><td class="text-gray-400">+2.4%</td></tr>
                     <tr><td class="text-left bg-gray-800">延人公里(累計)</td><td class="text-white" id="t1-tbl-paxkm">1,043,595,100</td><td class="text-alert">-0.8%</td></tr>
                     <tr><td class="text-left bg-gray-800">列車公里(累計)</td><td class="text-white" id="t1-tbl-trainkm">1,525,317 公里</td><td class="text-gray-400">+1.0%</td></tr>
                     <tr><td class="text-left bg-gray-800">座位公里(累計)</td><td class="text-white" id="t1-tbl-seatkm">1,490,234,851 公里</td><td class="text-gray-400">+1.1%</td></tr>
@@ -236,10 +224,10 @@
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div class="panel border-t-2 border-white py-3"><div class="kpi-value-detail text-white" id="t2-total">5,506</div><div class="kpi-title-detail mt-2">區間累計總件數</div></div>
-            <div class="panel border-t-2 border-red-500 py-3"><div class="kpi-value-detail text-red-500" id="t2-major">1,008</div><div class="kpi-title-detail mt-2">區間重大事故總數</div></div>
-            <div class="panel border-t-2 border-amber-500 py-3"><div class="kpi-value-detail text-amber-500" id="t2-normal">1,431</div><div class="kpi-title-detail mt-2">區間一般事故總數</div></div>
-            <div class="panel border-t-2 border-cyan-500 py-3"><div class="kpi-value-detail text-cyan-500" id="t2-abnormal">3,067</div><div class="kpi-title-detail mt-2">區間異常事件總數</div></div>
+            <div class="panel border-t-2 border-white py-3"><div class="kpi-value-detail text-white" id="t2-total">5,506</div><div class="kpi-title-detail mt-2">累計總件數</div></div>
+            <div class="panel border-t-2 border-red-500 py-3"><div class="kpi-value-detail text-red-500" id="t2-major">1,008</div><div class="kpi-title-detail mt-2">重大事故總數</div></div>
+            <div class="panel border-t-2 border-amber-500 py-3"><div class="kpi-value-detail text-amber-500" id="t2-normal">1,431</div><div class="kpi-title-detail mt-2">一般事故總數</div></div>
+            <div class="panel border-t-2 border-cyan-500 py-3"><div class="kpi-value-detail text-cyan-500" id="t2-abnormal">3,067</div><div class="kpi-title-detail mt-2">異常事件總數</div></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
@@ -249,7 +237,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-            <div class="panel lg:col-span-5 flex flex-col min-h-[300px]"><div class="panel-title">肇因深度追蹤與溯源 (區間累計)</div><div class="flex-1 relative"><canvas id="safetyBarChart"></canvas></div></div>
+            <div class="panel lg:col-span-5 flex flex-col min-h-[300px]"><div class="panel-title">肇因深度追蹤與溯源</div><div class="flex-1 relative"><canvas id="safetyBarChart"></canvas></div></div>
             <div class="panel lg:col-span-7 flex flex-col overflow-x-auto min-h-[300px]"><div class="panel-title">高風險熱區識別：營運機構 vs 一階肇因 熱區矩陣</div>
                 <div class="min-w-[500px] mt-1"><table class="w-full text-center"><thead><tr><th class="text-left">(一階肇因) ↓ vs 機構 →</th><th class="text-center">臺鐵</th><th class="text-center">高鐵</th><th class="text-center">林鐵</th><th class="text-center">糖鐵</th></tr></thead>
                 <tbody id="t2-heat-table">
@@ -282,14 +270,14 @@
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div class="panel border-t-2 border-yellow-500 py-3"><div class="kpi-value-detail text-yellow-500" id="t3-kpi1">28</div><div class="kpi-title-detail mt-2">區間定期檢查開立總數</div></div>
-            <div class="panel border-t-2 border-amber-500 py-3"><div class="kpi-value-detail text-amber-500" id="t3-kpi2">14</div><div class="kpi-title-detail mt-2">區間不定期檢查開立總數</div></div>
-            <div class="panel border-t-2 border-orange-500 py-3"><div class="kpi-value-detail text-orange-500" id="t3-kpi3">12</div><div class="kpi-title-detail mt-2">現行屆期案件 (期末快照)</div></div>
-            <div class="panel border-t-2 border-red-600 py-3 bg-red-950/20"><div class="kpi-value-detail text-red-500" id="t3-kpi4">24</div><div class="kpi-title-detail mt-2 text-red-400 font-bold">現行逾期未結案 (期末快照)</div></div>
+            <div class="panel border-t-2 border-yellow-500 py-3"><div class="kpi-value-detail text-yellow-500" id="t3-kpi1">28</div><div class="kpi-title-detail mt-2">定期檢查開立總數</div></div>
+            <div class="panel border-t-2 border-amber-500 py-3"><div class="kpi-value-detail text-amber-500" id="t3-kpi2">14</div><div class="kpi-title-detail mt-2">不定期檢查開立總數</div></div>
+            <div class="panel border-t-2 border-orange-500 py-3"><div class="kpi-value-detail text-orange-500" id="t3-kpi3">12</div><div class="kpi-title-detail mt-2">現行屆期案件</div></div>
+            <div class="panel border-t-2 border-red-600 py-3 bg-red-950/20"><div class="kpi-value-detail text-red-500" id="t3-kpi4">24</div><div class="kpi-title-detail mt-2 text-red-400 font-bold">現行逾期未結案</div></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
-            <div class="panel lg:col-span-7 flex flex-col min-h-[300px]"><div class="panel-title">行政管制效能評估：區間開立與結案趨勢</div><div class="flex-1 relative"><canvas id="inspectTrendChart"></canvas></div></div>
+            <div class="panel lg:col-span-7 flex flex-col min-h-[300px]"><div class="panel-title">行政管制效能評估：開立與結案趨勢</div><div class="flex-1 relative"><canvas id="inspectTrendChart"></canvas></div></div>
             <div class="panel lg:col-span-5 flex flex-col min-h-[300px]"><div class="panel-title">發現問題分級佔比</div><div class="flex-1 relative"><canvas id="inspectTypeChart"></canvas></div></div>
         </div>
 
@@ -297,10 +285,10 @@
             <div class="panel flex flex-col overflow-x-auto min-h-[300px]"><div class="panel-title">列管追蹤動態矩陣：各機構案件辦理狀態</div>
                 <div class="min-w-[600px] mt-1"><table class="w-full text-center"><thead><tr><th class="text-left">辦理狀態 ↓ \ 機構 →</th><th class="text-center">臺鐵</th><th class="text-center">高鐵</th><th class="text-center">林鐵</th><th class="text-center">糖鐵</th></tr></thead>
                 <tbody id="t3-heat-table">
-                    <tr><td class="text-left text-red-400 font-bold">🚨 逾期未結案 (立即督導)</td><td class="heat-5">18</td><td class="heat-1">0</td><td class="heat-5">1</td><td class="heat-1">0</td></tr>
-                    <tr><td class="text-left text-orange-400">⚠️ 屆期案件警示 (14天內)</td><td class="heat-3">8</td><td class="heat-1">2</td><td class="heat-1">0</td><td class="heat-1">0</td></tr>
+                    <tr><td class="text-left text-red-400 font-bold">🚨 逾期未結案</td><td class="heat-5">18</td><td class="heat-1">0</td><td class="heat-5">1</td><td class="heat-1">0</td></tr>
+                    <tr><td class="text-left text-orange-400">⚠️ 屆期案件警示</td><td class="heat-3">8</td><td class="heat-1">2</td><td class="heat-1">0</td><td class="heat-1">0</td></tr>
                     <tr><td class="text-left">⏱️ 正常列管中</td><td class="heat-2">45</td><td class="heat-2">12</td><td class="heat-2">5</td><td class="heat-2">3</td></tr>
-                    <tr><td class="text-left text-gray-500">✅ 區間已結案總數</td><td class="heat-1 text-emerald-500" id="t3-closed-tra">32</td><td class="heat-1 text-emerald-500" id="t3-closed-thsr">18</td><td class="heat-1 text-emerald-500">4</td><td class="heat-1 text-emerald-500">2</td></tr>
+                    <tr><td class="text-left text-gray-500">✅ 已結案總數</td><td class="heat-1 text-emerald-500" id="t3-closed-tra">32</td><td class="heat-1 text-emerald-500" id="t3-closed-thsr">18</td><td class="heat-1 text-emerald-500">4</td><td class="heat-1 text-emerald-500">2</td></tr>
                 </tbody></table></div>
             </div>
         </div>
@@ -311,7 +299,7 @@
             <div class="flex items-center gap-4"><button class="back-btn" onclick="navTo('main-page')">← 返回總覽</button><h1 class="text-2xl font-bold text-green-400">⚙️ 設備可靠度監理看板</h1></div>
             <div class="flex items-center gap-4 flex-wrap">
                 <div class="slicer-panel">
-                    <button class="slicer-btn active" style="background-color: #3b82f6;" onclick="setEquipAgency(this, 'ALL')">全路網</button>
+                    <button class="slicer-btn active" style="background-color: #3b82f6;" onclick="setEquipAgency(this, 'ALL')">全鐵路機構</button>
                     <button class="slicer-btn" onclick="setEquipAgency(this, 'TRA')">臺鐵</button>
                     <button class="slicer-btn" onclick="setEquipAgency(this, 'THSR')">高鐵</button>
                 </div>
@@ -330,30 +318,30 @@
         </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div class="panel border-t-2 border-white py-3"><div class="kpi-value-detail text-white" id="t4-kpi1">142</div><div class="kpi-title-detail mt-2">區間設備異常通報(累計)</div></div>
-            <div class="panel border border-red-500 py-3 bg-[#1a1a1a]"><div class="kpi-value-detail text-red-500"><span id="t4-kpi2">1,420</span><span class="text-sm text-gray-400 ml-1">min</span></div><div class="kpi-title-detail mt-2 text-gray-400">區間總誤點時間 (營運衝擊)</div></div>
-            <div class="panel border border-amber-500 py-3 bg-[#1a1a1a]"><div class="kpi-value-detail text-amber-500 mt-2 text-3xl" id="t4-kpi3">轉轍器</div><div class="kpi-title-detail mt-2 text-gray-400">區間重複失效最高子系統</div></div>
-            <div class="panel border border-cyan-500 py-3 bg-[#1a1a1a]"><div class="kpi-value-detail text-cyan-500 mt-2 text-3xl" id="t4-kpi4">台北電務段</div><div class="kpi-title-detail mt-2 text-gray-400">區間品質待改善重點單位</div></div>
+            <div class="panel border-t-2 border-white py-3"><div class="kpi-value-detail text-white" id="t4-kpi1">142</div><div class="kpi-title-detail mt-2">設備異常通報(累計)</div></div>
+            <div class="panel border border-red-500 py-3 bg-[#1a1a1a]"><div class="kpi-value-detail text-red-500"><span id="t4-kpi2">1,420</span><span class="text-sm text-gray-400 ml-1">min</span></div><div class="kpi-title-detail mt-2 text-gray-400">總誤點時間</div></div>
+            <div class="panel border border-amber-500 py-3 bg-[#1a1a1a]"><div class="kpi-value-detail text-amber-500 mt-2 text-3xl" id="t4-kpi3">轉轍器</div><div class="kpi-title-detail mt-2 text-gray-400">重複失效最高子系統</div></div>
+            <div class="panel border border-cyan-500 py-3 bg-[#1a1a1a]"><div class="kpi-value-detail text-cyan-500 mt-2 text-3xl" id="t4-kpi4">台北電務段</div><div class="kpi-title-detail mt-2 text-gray-400">品質待改善重點單位</div></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
             <div class="panel lg:col-span-8 flex flex-col min-h-[350px]">
-                <div class="panel-title text-[#f59e0b]">關鍵系統故障之「營運衝擊」：區間延誤分鐘數與通報件數分析</div>
+                <div class="panel-title text-[#f59e0b]">關鍵系統故障之「營運衝擊」：延誤分鐘數與通報件數分析</div>
                 <div class="flex-1 relative mt-2"><canvas id="equipImpactChart"></canvas></div>
             </div>
             <div class="panel lg:col-span-4 flex flex-col min-h-[350px]">
-                <div class="panel-title text-[#f59e0b]">維修單位「檢修品質評估」：轄管設備區間故障頻率對比</div>
+                <div class="panel-title text-[#f59e0b]">維修單位「檢修品質評估」：轄管設備故障頻率對比</div>
                 <div class="flex-1 relative mt-2"><canvas id="equipMaintChart"></canvas></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
             <div class="panel lg:col-span-5 flex flex-col min-h-[300px]">
-                <div class="panel-title text-[#f59e0b]">子系統區間重複失效與「原因分析」排名</div>
+                <div class="panel-title text-[#f59e0b]">子系統重複失效與「原因分析」排名</div>
                 <div class="flex-1 relative mt-2"><canvas id="equipSubsystemBar"></canvas></div>
             </div>
             <div class="panel lg:col-span-7 flex flex-col overflow-x-auto min-h-[300px]">
-                <div class="panel-title text-[#f59e0b]">檢修品質溯源矩陣：維修單位 vs 故障系統 (區間累加熱區)</div>
+                <div class="panel-title text-[#f59e0b]">檢修品質溯源矩陣：維修單位 vs 故障系統 (累加熱區)</div>
                 <div class="min-w-[600px] mt-3"><table class="w-full text-center text-xs border-collapse">
                     <thead id="t4-heat-head"><tr><th class="text-left bg-transparent border-none text-gray-400 pb-4">故障系統 ↓ \ 維修單位 →</th><th class="bg-transparent border-none text-gray-400 pb-4">台北電務段</th><th class="bg-transparent border-none text-gray-400 pb-4">台北機務段</th><th class="bg-transparent border-none text-gray-400 pb-4">新竹工務段</th><th class="bg-transparent border-none text-gray-400 pb-4">台中機務段</th><th class="bg-transparent border-none text-gray-400 pb-4">高雄電務段</th></tr></thead>
                     <tbody id="t4-heat-table">
@@ -385,37 +373,39 @@
         let charts = {};
 
         // 基準資料：用於乘載運算，索引 0~5 代表 114/10 ~ 115/03 共6個月的單月權重模擬
-        // 權重代表該月的相對業務量 (1.0為基準)
         const monthWeights = [0.85, 0.9, 1.15, 0.95, 1.0, 0.92]; 
 
-        // 基準數據 (以單月為基底)
-        const baseOpYearly = [15, 20, 21, 22]; // 不受月份影響(年度)
+        const baseOpYearly = [15, 20, 21, 22];
         const baseOpStation = [85000, 120000, 65000, 45000, 38000, 95000, 88000];
-        const baseOpMonthly = [24.2, 24.3, 24.1, 24.2, 23.5, 24.4, 24.1, 24.2, 24.3, 24.2]; // 歷史固定
-        const baseSafetyBar = [1987, 1560, 921, 535, 503]; // 這裡假設為長年累計，加上區間因子放大
+        const baseOpMonthly = [24.2, 24.3, 24.1, 24.2, 23.5, 24.4, 24.1, 24.2, 24.3, 24.2];
+        const baseSafetyBar = [1987, 1560, 921, 535, 503];
         const baseSafetyType = [20, 30, 50];
-        const baseInspectT1 = [45, 52, 48, 60, 42]; // 趨勢圖，歷史固定
+        const baseInspectT1 = [45, 52, 48, 60, 42];
         const baseInspectT2 = [40, 55, 50, 45, 38];
 
         window.onload = function() {
-            // 初始圖表繪製 (省略詳細設定以節省空間，與前版完全相同，只改變更新邏輯)
+            // 初始化 首頁 (靜態總覽)
             charts.mainOp = new Chart(document.getElementById('mainOpChart'), { type: 'line', data: { labels: ['10月','11月','12月','1月','2月','3月'], datasets: [{ data: [98.5, 99.1, 98.8, 99.3, 99.0, 99.2], borderColor: '#3b82f6', tension: 0.3, pointRadius: 0 }] }, options: basicOpt });
             charts.mainSafety = new Chart(document.getElementById('mainSafetyChart'), { type: 'doughnut', data: { labels: ['重大','異常','一般'], datasets: [{ data: [10, 50, 40], backgroundColor: ['#ef4444', '#06b6d4', '#f59e0b'], borderWidth: 0 }] }, options: { ...basicOpt, cutout: '80%' } });
             charts.mainInspect = new Chart(document.getElementById('mainInspectChart'), { type: 'bar', data: { labels: ['定期','不定期','屆期','逾期'], datasets: [{ data: [28, 14, 12, 24], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'] }] }, options: basicOpt });
             charts.mainEquip = new Chart(document.getElementById('mainEquipChart'), { type: 'line', data: { labels: ['W1','W2','W3','W4'], datasets: [{ data: [300, 450, 250, 420], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }] }, options: basicOpt });
 
+            // 初始化 T1
             charts.opYearly = new Chart(document.getElementById('opYearlyChart'), { data: { labels: ['111', '112', '113', '114'], datasets: [ { type: 'bar', label: '平均日運量(萬人次)', data: [...baseOpYearly], backgroundColor: 'rgba(251, 146, 60, 0.8)', yAxisID: 'y1' }, { type: 'line', label: '平均座位利用率(%)', data: [53, 71, 72, 72], borderColor: '#6b7280', tension: 0, fill:false, yAxisID: 'y', pointRadius: 5, pointBackgroundColor: '#4b5563' } ]}, options: { ...basicOpt, plugins: { legend: { display: true, position: 'bottom', labels:{ boxWidth: 10 } } }, scales: { y: { position: 'left', min: 50, max: 80, grid:{color:'#2a2a2a'} }, y1: { position: 'right', min: 0, max: 30, grid: { display: false } } } } });
             charts.opStation = new Chart(document.getElementById('opStationChart'), { type: 'bar', data: { labels: ['南港','台北','板橋','桃園','新竹','台中','左營'], datasets: [{ label:'進出量', data: [...baseOpStation], backgroundColor: 'rgba(251, 146, 60, 0.8)' }] }, options: { ...basicOpt, plugins: { legend: { display: false } } } });
             charts.opMonthly = new Chart(document.getElementById('opMonthlyTrend'), { data: { labels: ['114.03','114.04','114.05','114.06','114.07','114.08','114.09','114.10','114.11','114.12'], datasets: [ { type: 'bar', label: '每日旅客數(萬人)', data: [...baseOpMonthly], backgroundColor: 'rgba(251, 146, 60, 0.4)', yAxisID: 'y' }, { type: 'line', label: '每日開行班次', data: [50, 70, 50, 45, 110, 40, 130, 120, 150, 190], borderColor: '#f59e0b', tension: 0, fill:false, yAxisID: 'y1', pointRadius: 5, pointBackgroundColor: '#f59e0b' } ]}, options: { ...basicOpt, plugins: { legend: { display: true, position: 'bottom', labels:{ boxWidth: 10 } } }, scales: { y: { position: 'left', min: 0, max: 30, grid:{color:'#2a2a2a'} }, y1: { position: 'right', min: 0, max: 250, grid: { display: false } } } } });
 
+            // 初始化 T2
             charts.safetyTrend = new Chart(document.getElementById('safetyTrendChart'), { type: 'line', data: { labels: ['114/08', '114/09', '114/10', '114/11', '114/12', '115/01', '115/02'], datasets: [{ label: '重大', data: [140, 145, 140, 138, 145, 135, 150], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }, { label: '一般', data: [240, 205, 200, 210, 195, 185, 205], borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }, { label: '異常', data: [430, 440, 420, 430, 440, 450, 450], borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }] }, options: { ...basicOpt, plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 8, usePointStyle: true } } } } });
             charts.safetyOrg = new Chart(document.getElementById('safetyOrgChart'), { type: 'doughnut', data: { labels: ['臺鐵', '高鐵', '林鐵', '糖鐵'], datasets: [{ data: [65, 15, 10, 10], backgroundColor: ['#3b82f6', '#f97316', '#22c55e', '#eab308'], borderWidth: 1, borderColor: '#1a1a1a' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } } } });
             charts.safetyType = new Chart(document.getElementById('safetyTypeChart'), { type: 'doughnut', data: { labels: ['重大行車事故', '一般行車事故', '異常事件'], datasets: [{ data: [...baseSafetyType], backgroundColor: ['#ef4444', '#f59e0b', '#06b6d4'], borderWidth: 1, borderColor: '#1a1a1a' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } } } });
             charts.safetyBar = new Chart(document.getElementById('safetyBarChart'), { type: 'bar', data: { labels: ['1.鐵路設備功能異常', '2.員工與承商因素', '3.民眾與旅客因素', '4.外物因素', '5.天然因素'], datasets: [{ data: [...baseSafetyBar], backgroundColor: '#475569' }] }, options: { ...noGridOpt, indexAxis: 'y' } });
 
+            // 初始化 T3
             charts.inspectTrend = new Chart(document.getElementById('inspectTrendChart'), { type: 'bar', data: { labels: ['10月','11月','12月','1月','2月'], datasets: [ { label: '開立問題(件)', data: [...baseInspectT1], backgroundColor: '#f59e0b' }, { label: '結案(件)', data: [...baseInspectT2], backgroundColor: '#10b981' } ]}, options: { ...basicOpt, plugins: { legend: { display: true, position: 'top', labels:{ boxWidth: 10 } } } } });
             charts.inspectType = new Chart(document.getElementById('inspectTypeChart'), { type: 'doughnut', data: { labels: ['缺失事項', '觀察事項'], datasets: [{ data: [24, 18], backgroundColor: ['#ef4444', '#f59e0b'], borderWidth: 1, borderColor: '#1a1a1a' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } } } });
 
+            // 初始化 T4
             charts.equipImpact = new Chart(document.getElementById('equipImpactChart'), {
                 type: 'bar', data: { labels: ['機車車輛','號誌系統','軌道設施','電力系統','通訊系統'], datasets: [ { type: 'line', label: '誤點總分鐘數(右軸)', data: [850, 420, 150, 0, 0], borderColor: '#ef4444', backgroundColor: '#ef4444', borderWidth: 2, yAxisID: 'y1', pointRadius: 4, pointBackgroundColor: '#ef4444' }, { type: 'bar', label: '故障通報件數(左軸)', data: [65, 45, 25, 5, 2], backgroundColor: '#3b82f6', yAxisID: 'y' } ] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels:{ color: '#ccc', usePointStyle: true, boxWidth: 8 } } }, scales: { x: { grid: { display: false }, ticks: { color: '#888' } }, y: { type: 'linear', position: 'left', grid: { color: '#2a2a2a' }, min: 0, max: 200, ticks: { color: '#888' } }, y1: { type: 'linear', position: 'right', grid: { display: false }, min: 0, max: 2500, ticks: { color: '#888' } } } }
@@ -432,24 +422,11 @@
             let endEl = document.getElementById(endId);
             let s = parseInt(startEl.value);
             let e = parseInt(endEl.value);
-            if (s > e) { e = s; endEl.value = e; } // 防呆：結束不能早於起始
+            if (s > e) { e = s; endEl.value = e; } // 防呆
             
             let sum = 0;
             for(let i=s; i<=e; i++) { sum += monthWeights[i]; }
-            return { sumFactor: sum, avgFactor: sum / (e - s + 1) }; // 傳回「總和倍數」與「平均倍數」
-        }
-
-        // 全域區間同步
-        function updateAllDashboards() {
-            let s = document.getElementById('g-start').value;
-            let e = document.getElementById('g-end').value;
-            if (parseInt(s) > parseInt(e)) { e = s; document.getElementById('g-end').value = e; }
-            
-            ['t1','t2','t3','t4'].forEach(prefix => {
-                document.getElementById(prefix+'-start').value = s;
-                document.getElementById(prefix+'-end').value = e;
-            });
-            updateOpDashboard(); updateSafetyDashboard(); updateInspectDashboard(); updateEquipDashboard();
+            return { sumFactor: sum, avgFactor: sum / (e - s + 1) };
         }
 
         // T1: 營運服務
@@ -464,12 +441,10 @@
             let totalMultiplier = factorA * range.sumFactor;
             let avgMultiplier = range.avgFactor;
 
-            // 數值累加 (總人數使用總和倍數，乘載率使用平均倍數)
             document.getElementById('t1-pax').innerText = Math.round(6282609 * totalMultiplier).toLocaleString();
             let baseSeat = currentOpAgency === 'THSR' ? 82.5 : currentOpAgency === 'TRA' ? 68.2 : 71.5;
             document.getElementById('t1-seat').innerText = (baseSeat * avgMultiplier).toFixed(1) + '%';
             
-            // 地圖連動
             let routeHTML = '<div class="route-line"></div>';
             const allStations = ['南港','台北','板橋','桃園','新竹','苗栗','台中','彰化','嘉義','台南','左營'];
             const traStations = ['南港','台北','板橋','桃園','新竹','台中','彰化','嘉義','台南'];
@@ -484,7 +459,6 @@
             document.getElementById('t1-top-in').innerText = Math.round(85240 * totalMultiplier).toLocaleString();
             document.getElementById('t1-top-out').innerText = Math.round(86110 * totalMultiplier).toLocaleString();
 
-            // 底部比較表完美連動
             document.getElementById('t1-tbl-pax').innerText = Math.round(6282609 * totalMultiplier).toLocaleString() + ' 人';
             document.getElementById('t1-tbl-paxkm').innerText = Math.round(1043595100 * totalMultiplier).toLocaleString();
             document.getElementById('t1-tbl-trainkm').innerText = Math.round(1525317 * totalMultiplier).toLocaleString() + ' 公里';
@@ -492,10 +466,8 @@
             document.getElementById('t1-tbl-seat').innerText = (71.5 * avgMultiplier).toFixed(1) + '%';
             document.getElementById('t1-tbl-punctual').innerText = (99.2 * avgMultiplier > 100 ? 100 : 99.2 * avgMultiplier).toFixed(1) + '%';
             
-            // 橫條圖：各站總量隨區間累加
             charts.opStation.data.datasets[0].data = baseOpStation.map(v => v * totalMultiplier);
             charts.opStation.update();
-            // 折線圖：平均運量隨機構變動
             charts.opYearly.data.datasets[0].data = baseOpYearly.map(v => v * factorA);
             charts.opYearly.update();
         }
@@ -504,13 +476,11 @@
         function updateSafetyDashboard() {
             let range = getRangeFactor('t2-start', 't2-end');
             
-            // 事故件數隨區間月份累加
             document.getElementById('t2-total').innerText = Math.round(5506 * range.sumFactor).toLocaleString();
             document.getElementById('t2-major').innerText = Math.round(1008 * range.sumFactor).toLocaleString();
             document.getElementById('t2-normal').innerText = Math.round(1431 * range.sumFactor).toLocaleString();
             document.getElementById('t2-abnormal').innerText = Math.round(3067 * range.sumFactor).toLocaleString();
             
-            // 長條圖隨區間累加
             charts.safetyBar.data.datasets[0].data = baseSafetyBar.map(v => v * range.sumFactor);
             charts.safetyBar.update();
             charts.safetyType.data.datasets[0].data = baseSafetyType.map(v => v * range.sumFactor);
@@ -521,7 +491,6 @@
         function updateInspectDashboard() {
             let range = getRangeFactor('t3-start', 't3-end');
             
-            // 開立問題數累加，但逾期未結案屬於期末快照，所以只吃最後一個月的單月係數(或平均)
             document.getElementById('t3-kpi1').innerText = Math.round(28 * range.sumFactor);
             document.getElementById('t3-kpi2').innerText = Math.round(14 * range.sumFactor);
             document.getElementById('t3-kpi3').innerText = Math.round(12 * range.avgFactor);
@@ -530,7 +499,6 @@
             document.getElementById('t3-closed-tra').innerText = Math.round(32 * range.sumFactor);
             document.getElementById('t3-closed-thsr').innerText = Math.round(18 * range.sumFactor);
             
-            // 動態調整趨勢圖數據範圍 (簡單模擬放大)
             charts.inspectTrend.data.datasets[0].data = baseInspectT1.map(v => v * range.avgFactor);
             charts.inspectTrend.data.datasets[1].data = baseInspectT2.map(v => v * range.avgFactor);
             charts.inspectTrend.update();
@@ -546,7 +514,6 @@
         function updateEquipDashboard() {
             let range = getRangeFactor('t4-start', 't4-end');
             
-            // 延誤分鐘數與故障件數「隨區間長度累加」
             if(currentEqAgency === 'THSR') {
                 document.getElementById('t4-kpi1').innerText = Math.round(45 * range.sumFactor);
                 document.getElementById('t4-kpi2').innerText = Math.round(210 * range.sumFactor).toLocaleString();
@@ -574,7 +541,6 @@
             }
             charts.equipMaint.update();
             
-            // 雙軸圖數值累加
             charts.equipImpact.data.datasets[0].data = [850, 420, 150, 0, 0].map(v => v * range.sumFactor * (currentEqAgency==='THSR'?0.3:1));
             charts.equipImpact.data.datasets[1].data = [65, 45, 25, 5, 2].map(v => v * range.sumFactor * (currentEqAgency==='THSR'?0.3:1));
             charts.equipImpact.update();
@@ -582,7 +548,6 @@
             charts.equipSubsystem.data.datasets[0].data = [22, 18, 15, 12, 8].map(v => v * range.sumFactor * (currentEqAgency==='THSR'?0.4:1));
             charts.equipSubsystem.update();
             
-            // 熱區矩陣數字更新
             if(currentEqAgency === 'ALL') {
                 document.getElementById('t4-h1').innerText = Math.round(42 * range.sumFactor) + '件';
                 document.getElementById('t4-h2').innerText = Math.round(18 * range.sumFactor) + '件';
